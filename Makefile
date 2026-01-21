@@ -49,13 +49,17 @@ docker-down:
 	@docker-compose down
 
 # Database migrations
+# Database URL can be set via DB_URL environment variable
+# Default: postgres://postgres:postgres@localhost:5432/slips?sslmode=disable
+DB_URL ?= postgres://postgres:postgres@localhost:5432/slips?sslmode=disable
+
 migrate-up:
 	@echo "Running migrations..."
-	@migrate -path migrations -database "postgres://postgres:postgres@localhost:5432/slips?sslmode=disable" up
+	@migrate -path migrations -database "$(DB_URL)" up
 
 migrate-down:
 	@echo "Rolling back migrations..."
-	@migrate -path migrations -database "postgres://postgres:postgres@localhost:5432/slips?sslmode=disable" down
+	@migrate -path migrations -database "$(DB_URL)" down
 
 # Run tests
 test:

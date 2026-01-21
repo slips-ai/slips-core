@@ -58,7 +58,7 @@ func (s *TaskServer) CreateTask(ctx context.Context, req *taskv1.CreateTaskReque
 func (s *TaskServer) GetTask(ctx context.Context, req *taskv1.GetTaskRequest) (*taskv1.GetTaskResponse, error) {
 	id, err := uuid.Parse(req.Id)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid task ID: %v", err)
+		return nil, status.Error(codes.InvalidArgument, "invalid task ID format")
 	}
 
 	task, err := s.service.GetTask(ctx, id)
@@ -81,7 +81,7 @@ func (s *TaskServer) GetTask(ctx context.Context, req *taskv1.GetTaskRequest) (*
 func (s *TaskServer) UpdateTask(ctx context.Context, req *taskv1.UpdateTaskRequest) (*taskv1.UpdateTaskResponse, error) {
 	id, err := uuid.Parse(req.Id)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid task ID: %v", err)
+		return nil, status.Error(codes.InvalidArgument, "invalid task ID format")
 	}
 
 	// Validate input
@@ -115,7 +115,7 @@ func (s *TaskServer) UpdateTask(ctx context.Context, req *taskv1.UpdateTaskReque
 func (s *TaskServer) DeleteTask(ctx context.Context, req *taskv1.DeleteTaskRequest) (*taskv1.DeleteTaskResponse, error) {
 	id, err := uuid.Parse(req.Id)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid task ID: %v", err)
+		return nil, status.Error(codes.InvalidArgument, "invalid task ID format")
 	}
 
 	if err := s.service.DeleteTask(ctx, id); err != nil {
@@ -142,7 +142,7 @@ func (s *TaskServer) ListTasks(ctx context.Context, req *taskv1.ListTasksRequest
 
 	tasks, err := s.service.ListTasks(ctx, pageSize, offset)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to list tasks: %v", err)
+		return nil, grpcerrors.ToGRPCError(err, "failed to list tasks")
 	}
 
 	protoTasks := make([]*taskv1.Task, len(tasks))

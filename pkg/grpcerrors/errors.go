@@ -82,10 +82,10 @@ func ValidateTagName(name string) error {
 // ValidateInt32Range validates that an int value is within int32 bounds
 func ValidateInt32Range(value int, fieldName string) error {
 	if value < 0 {
-		return fmt.Errorf("%s cannot be negative", fieldName)
+		return status.Errorf(codes.InvalidArgument, "%s cannot be negative", fieldName)
 	}
 	if value > 2147483647 {
-		return fmt.Errorf("%s exceeds maximum value of 2147483647", fieldName)
+		return status.Errorf(codes.InvalidArgument, "%s exceeds maximum value of 2147483647", fieldName)
 	}
 	return nil
 }

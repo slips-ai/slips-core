@@ -51,7 +51,7 @@ func (s *TagServer) CreateTag(ctx context.Context, req *tagv1.CreateTagRequest) 
 func (s *TagServer) GetTag(ctx context.Context, req *tagv1.GetTagRequest) (*tagv1.GetTagResponse, error) {
 	id, err := uuid.Parse(req.Id)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid tag ID: %v", err)
+		return nil, status.Error(codes.InvalidArgument, "invalid tag ID format")
 	}
 
 	tag, err := s.service.GetTag(ctx, id)
@@ -73,7 +73,7 @@ func (s *TagServer) GetTag(ctx context.Context, req *tagv1.GetTagRequest) (*tagv
 func (s *TagServer) UpdateTag(ctx context.Context, req *tagv1.UpdateTagRequest) (*tagv1.UpdateTagResponse, error) {
 	id, err := uuid.Parse(req.Id)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid tag ID: %v", err)
+		return nil, status.Error(codes.InvalidArgument, "invalid tag ID format")
 	}
 
 	// Validate input
@@ -100,7 +100,7 @@ func (s *TagServer) UpdateTag(ctx context.Context, req *tagv1.UpdateTagRequest) 
 func (s *TagServer) DeleteTag(ctx context.Context, req *tagv1.DeleteTagRequest) (*tagv1.DeleteTagResponse, error) {
 	id, err := uuid.Parse(req.Id)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid tag ID: %v", err)
+		return nil, status.Error(codes.InvalidArgument, "invalid tag ID format")
 	}
 
 	if err := s.service.DeleteTag(ctx, id); err != nil {
@@ -127,7 +127,7 @@ func (s *TagServer) ListTags(ctx context.Context, req *tagv1.ListTagsRequest) (*
 
 	tags, err := s.service.ListTags(ctx, pageSize, offset)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to list tags: %v", err)
+		return nil, grpcerrors.ToGRPCError(err, "failed to list tags")
 	}
 
 	protoTags := make([]*tagv1.Tag, len(tags))
