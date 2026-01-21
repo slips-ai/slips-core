@@ -125,6 +125,14 @@ func (s *TagServer) ListTags(ctx context.Context, req *tagv1.ListTagsRequest) (*
 	// Always return the first page (offset 0) until pagination tokens are implemented
 	offset := 0
 
+	// Validate int32 bounds at gRPC layer before calling repository
+	if err := grpcerrors.ValidateInt32Range(pageSize, "limit"); err != nil {
+		return nil, err
+	}
+	if err := grpcerrors.ValidateInt32Range(offset, "offset"); err != nil {
+		return nil, err
+	}
+
 	tags, err := s.service.ListTags(ctx, pageSize, offset)
 	if err != nil {
 		return nil, grpcerrors.ToGRPCError(err, "failed to list tags")

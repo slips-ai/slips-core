@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/slips-ai/slips-core/internal/tag/domain"
 	"github.com/slips-ai/slips-core/pkg/grpcerrors"
 )
@@ -102,14 +102,7 @@ func (r *TagRepository) List(ctx context.Context, limit, offset int) ([]*domain.
 		offset = 0
 	}
 
-	// Validate int32 bounds
-	if err := grpcerrors.ValidateInt32Range(limit, "limit"); err != nil {
-		return nil, err
-	}
-	if err := grpcerrors.ValidateInt32Range(offset, "offset"); err != nil {
-		return nil, err
-	}
-
+	// Convert to int32 (validation is done at gRPC layer)
 	results, err := r.queries.ListTags(ctx, ListTagsParams{
 		Limit:  int32(limit),
 		Offset: int32(offset),
