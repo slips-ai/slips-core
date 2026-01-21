@@ -93,6 +93,14 @@ func (r *TagRepository) Delete(ctx context.Context, id uuid.UUID) error {
 
 // List lists tags with pagination
 func (r *TagRepository) List(ctx context.Context, limit, offset int) ([]*domain.Tag, error) {
+	// Validate parameters to prevent negative values and potential overflow
+	if limit < 0 {
+		limit = 0
+	}
+	if offset < 0 {
+		offset = 0
+	}
+
 	results, err := r.queries.ListTags(ctx, ListTagsParams{
 		Limit:  int32(limit),
 		Offset: int32(offset),

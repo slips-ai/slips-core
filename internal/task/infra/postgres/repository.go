@@ -98,6 +98,14 @@ func (r *TaskRepository) Delete(ctx context.Context, id uuid.UUID) error {
 
 // List lists tasks with pagination
 func (r *TaskRepository) List(ctx context.Context, limit, offset int) ([]*domain.Task, error) {
+	// Validate parameters to prevent negative values and potential overflow
+	if limit < 0 {
+		limit = 0
+	}
+	if offset < 0 {
+		offset = 0
+	}
+
 	results, err := r.queries.ListTasks(ctx, ListTasksParams{
 		Limit:  int32(limit),
 		Offset: int32(offset),
