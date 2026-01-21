@@ -9,7 +9,7 @@ database:
   host: localhost
   port: 5432
   user: postgres
-  password: postgres  # WARNING: For development only! Use SLIPS_DATABASE_PASSWORD env var in production
+  password: CHANGE_ME  # Placeholder only. Set via SLIPS_DATABASE_PASSWORD env var or secrets manager; do not use a real password here.
   dbname: slips
   sslmode: disable
 
