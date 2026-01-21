@@ -15,6 +15,8 @@ type Tag struct {
 }
 
 // NewTag creates a new tag
+// Note: CreatedAt and UpdatedAt timestamps are not set here.
+// They will be populated by the database on insertion (DEFAULT NOW()).
 func NewTag(name string) *Tag {
 	return &Tag{
 		ID:   uuid.New(),

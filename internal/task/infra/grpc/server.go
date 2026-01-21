@@ -31,6 +31,12 @@ func (s *TaskServer) CreateTask(ctx context.Context, req *taskv1.CreateTaskReque
 	if err := grpcerrors.ValidateNotEmpty(req.Title, "title"); err != nil {
 		return nil, err
 	}
+	if err := grpcerrors.ValidateLength(req.Title, "title", grpcerrors.MaxTitleLength); err != nil {
+		return nil, err
+	}
+	if err := grpcerrors.ValidateLength(req.Notes, "notes", grpcerrors.MaxNotesLength); err != nil {
+		return nil, err
+	}
 
 	task, err := s.service.CreateTask(ctx, req.Title, req.Notes)
 	if err != nil {
@@ -80,6 +86,12 @@ func (s *TaskServer) UpdateTask(ctx context.Context, req *taskv1.UpdateTaskReque
 
 	// Validate input
 	if err := grpcerrors.ValidateNotEmpty(req.Title, "title"); err != nil {
+		return nil, err
+	}
+	if err := grpcerrors.ValidateLength(req.Title, "title", grpcerrors.MaxTitleLength); err != nil {
+		return nil, err
+	}
+	if err := grpcerrors.ValidateLength(req.Notes, "notes", grpcerrors.MaxNotesLength); err != nil {
 		return nil, err
 	}
 

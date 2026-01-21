@@ -16,6 +16,8 @@ type Task struct {
 }
 
 // NewTask creates a new task
+// Note: CreatedAt and UpdatedAt timestamps are not set here.
+// They will be populated by the database on insertion (DEFAULT NOW()).
 func NewTask(title, notes string) *Task {
 	return &Task{
 		ID:    uuid.New(),

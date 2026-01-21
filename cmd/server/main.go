@@ -69,13 +69,13 @@ func main() {
 	// Connect to database
 	dbpool, err := pgxpool.New(ctx, cfg.Database.DatabaseURL())
 	if err != nil {
-		logr.Error("Failed to connect to database", "host", cfg.Database.Host)
+		logr.Error("Failed to connect to database", "host", cfg.Database.Host, "error", err)
 		os.Exit(1)
 	}
 	defer dbpool.Close()
 
 	if err := dbpool.Ping(ctx); err != nil {
-		logr.Error("Failed to ping database", "host", cfg.Database.Host)
+		logr.Error("Failed to ping database", "host", cfg.Database.Host, "error", err)
 		os.Exit(1)
 	}
 	logr.Info("Database connected", "host", cfg.Database.Host)

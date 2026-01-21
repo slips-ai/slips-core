@@ -28,7 +28,7 @@ func NewTagServer(service *application.Service) *TagServer {
 // CreateTag creates a new tag
 func (s *TagServer) CreateTag(ctx context.Context, req *tagv1.CreateTagRequest) (*tagv1.CreateTagResponse, error) {
 	// Validate input
-	if err := grpcerrors.ValidateNotEmpty(req.Name, "name"); err != nil {
+	if err := grpcerrors.ValidateTagName(req.Name); err != nil {
 		return nil, err
 	}
 
@@ -77,7 +77,7 @@ func (s *TagServer) UpdateTag(ctx context.Context, req *tagv1.UpdateTagRequest) 
 	}
 
 	// Validate input
-	if err := grpcerrors.ValidateNotEmpty(req.Name, "name"); err != nil {
+	if err := grpcerrors.ValidateTagName(req.Name); err != nil {
 		return nil, err
 	}
 

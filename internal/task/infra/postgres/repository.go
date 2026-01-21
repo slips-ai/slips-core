@@ -7,6 +7,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/slips-ai/slips-core/internal/task/domain"
+	"github.com/slips-ai/slips-core/pkg/grpcerrors"
 )
 
 // TaskRepository implements domain.Repository using PostgreSQL
@@ -104,6 +105,14 @@ func (r *TaskRepository) List(ctx context.Context, limit, offset int) ([]*domain
 	}
 	if offset < 0 {
 		offset = 0
+	}
+
+	// Validate int32 bounds
+	if err := grpcerrors.ValidateInt32Range(limit, "limit"); err != nil {
+		return nil, err
+	}
+	if err := grpcerrors.ValidateInt32Range(offset, "offset"); err != nil {
+		return nil, err
 	}
 
 	results, err := r.queries.ListTasks(ctx, ListTasksParams{

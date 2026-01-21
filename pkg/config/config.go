@@ -72,6 +72,8 @@ func Load(configPath string) (*Config, error) {
 }
 
 // DatabaseURL returns the database connection string
+// WARNING: This contains the password in plaintext. Never log or expose this value.
+// Use SafeDatabaseURL() for logging purposes.
 func (c *DatabaseConfig) DatabaseURL() string {
 	return fmt.Sprintf(
 		"postgres://%s:%s@%s:%d/%s?sslmode=%s",
