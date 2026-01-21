@@ -7,7 +7,6 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/slips-ai/slips-core/internal/task/domain"
-	"github.com/slips-ai/slips-core/pkg/grpcerrors"
 )
 
 // TaskRepository implements domain.Repository using PostgreSQL
