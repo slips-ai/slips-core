@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	taskv1 "github.com/slips-ai/slips-core/gen/api/proto/task/v1"
@@ -54,7 +55,10 @@ func main() {
 			logr.Warn("Failed to initialize tracing", "error", err)
 		} else {
 			defer func() {
-				if err := shutdown(ctx); err != nil {
+				// Use a fresh context with timeout for tracer shutdown
+				shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer shutdownCancel()
+				if err := shutdown(shutdownCtx); err != nil {
 					logr.Error("Failed to shutdown tracer", "error", err)
 				}
 			}()

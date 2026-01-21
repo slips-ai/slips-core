@@ -16,17 +16,13 @@ type Tag struct {
 
 // NewTag creates a new tag
 func NewTag(name string) *Tag {
-	now := time.Now()
 	return &Tag{
-		ID:        uuid.New(),
-		Name:      name,
-		CreatedAt: now,
-		UpdatedAt: now,
+		ID:   uuid.New(),
+		Name: name,
 	}
 }
 
 // Update updates the tag
 func (t *Tag) Update(name string) {
 	t.Name = name
-	t.UpdatedAt = time.Now()
 }

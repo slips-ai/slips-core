@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	taskv1 "github.com/slips-ai/slips-core/gen/api/proto/task/v1"
 	"github.com/slips-ai/slips-core/internal/task/application"
+	"github.com/slips-ai/slips-core/pkg/grpcerrors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -51,7 +52,7 @@ func (s *TaskServer) GetTask(ctx context.Context, req *taskv1.GetTaskRequest) (*
 
 	task, err := s.service.GetTask(ctx, id)
 	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "task not found: %v", err)
+		return nil, grpcerrors.ToGRPCError(err, "failed to get task")
 	}
 
 	return &taskv1.GetTaskResponse{
@@ -109,11 +110,9 @@ func (s *TaskServer) ListTasks(ctx context.Context, req *taskv1.ListTasksRequest
 		pageSize = 30
 	}
 
+	// For now, we don't support pagination tokens
+	// Always return the first page
 	offset := 0
-	if req.PageToken != "" {
-		// In a real implementation, decode the page token
-		// For simplicity, we'll skip this for now
-	}
 
 	tasks, err := s.service.ListTasks(ctx, pageSize, offset)
 	if err != nil {
@@ -131,6 +130,8 @@ func (s *TaskServer) ListTasks(ctx context.Context, req *taskv1.ListTasksRequest
 		}
 	}
 
+	// Note: next_page_token is not implemented yet
+	// Future implementation would return a token when len(tasks) == pageSize
 	return &taskv1.ListTasksResponse{
 		Tasks: protoTasks,
 	}, nil

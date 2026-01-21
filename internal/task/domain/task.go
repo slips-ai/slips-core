@@ -17,13 +17,10 @@ type Task struct {
 
 // NewTask creates a new task
 func NewTask(title, notes string) *Task {
-	now := time.Now()
 	return &Task{
-		ID:        uuid.New(),
-		Title:     title,
-		Notes:     notes,
-		CreatedAt: now,
-		UpdatedAt: now,
+		ID:    uuid.New(),
+		Title: title,
+		Notes: notes,
 	}
 }
 
@@ -31,5 +28,4 @@ func NewTask(title, notes string) *Task {
 func (t *Task) Update(title, notes string) {
 	t.Title = title
 	t.Notes = notes
-	t.UpdatedAt = time.Now()
 }
