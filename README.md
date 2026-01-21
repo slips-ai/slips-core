@@ -26,7 +26,7 @@ The project follows a three-layer clean architecture organized by feature:
 
 ## Prerequisites
 
-- Go 1.21+
+- Go 1.21 or later
 - Docker and Docker Compose
 - Make
 
