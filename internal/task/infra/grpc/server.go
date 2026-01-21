@@ -27,9 +27,14 @@ func NewTaskServer(service *application.Service) *TaskServer {
 
 // CreateTask creates a new task
 func (s *TaskServer) CreateTask(ctx context.Context, req *taskv1.CreateTaskRequest) (*taskv1.CreateTaskResponse, error) {
+	// Validate input
+	if err := grpcerrors.ValidateNotEmpty(req.Title, "title"); err != nil {
+		return nil, err
+	}
+
 	task, err := s.service.CreateTask(ctx, req.Title, req.Notes)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to create task: %v", err)
+		return nil, grpcerrors.ToGRPCError(err, "failed to create task")
 	}
 
 	return &taskv1.CreateTaskResponse{
@@ -73,9 +78,14 @@ func (s *TaskServer) UpdateTask(ctx context.Context, req *taskv1.UpdateTaskReque
 		return nil, status.Errorf(codes.InvalidArgument, "invalid task ID: %v", err)
 	}
 
+	// Validate input
+	if err := grpcerrors.ValidateNotEmpty(req.Title, "title"); err != nil {
+		return nil, err
+	}
+
 	task, err := s.service.UpdateTask(ctx, id, req.Title, req.Notes)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to update task: %v", err)
+		return nil, grpcerrors.ToGRPCError(err, "failed to update task")
 	}
 
 	return &taskv1.UpdateTaskResponse{
@@ -97,7 +107,7 @@ func (s *TaskServer) DeleteTask(ctx context.Context, req *taskv1.DeleteTaskReque
 	}
 
 	if err := s.service.DeleteTask(ctx, id); err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to delete task: %v", err)
+		return nil, grpcerrors.ToGRPCError(err, "failed to delete task")
 	}
 
 	return &taskv1.DeleteTaskResponse{}, nil
@@ -105,13 +115,17 @@ func (s *TaskServer) DeleteTask(ctx context.Context, req *taskv1.DeleteTaskReque
 
 // ListTasks lists tasks with pagination
 func (s *TaskServer) ListTasks(ctx context.Context, req *taskv1.ListTasksRequest) (*taskv1.ListTasksResponse, error) {
+	// Reject page_token if provided (not yet implemented)
+	if req.PageToken != "" {
+		return nil, status.Errorf(codes.Unimplemented, "page_token is not supported yet")
+	}
+
 	pageSize := int(req.PageSize)
 	if pageSize <= 0 || pageSize > 100 {
 		pageSize = 30
 	}
 
-	// For now, we don't support pagination tokens
-	// Always return the first page
+	// Always return the first page (offset 0) until pagination tokens are implemented
 	offset := 0
 
 	tasks, err := s.service.ListTasks(ctx, pageSize, offset)

@@ -27,9 +27,14 @@ func NewTagServer(service *application.Service) *TagServer {
 
 // CreateTag creates a new tag
 func (s *TagServer) CreateTag(ctx context.Context, req *tagv1.CreateTagRequest) (*tagv1.CreateTagResponse, error) {
+	// Validate input
+	if err := grpcerrors.ValidateNotEmpty(req.Name, "name"); err != nil {
+		return nil, err
+	}
+
 	tag, err := s.service.CreateTag(ctx, req.Name)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to create tag: %v", err)
+		return nil, grpcerrors.ToGRPCError(err, "failed to create tag")
 	}
 
 	return &tagv1.CreateTagResponse{
@@ -71,9 +76,14 @@ func (s *TagServer) UpdateTag(ctx context.Context, req *tagv1.UpdateTagRequest) 
 		return nil, status.Errorf(codes.InvalidArgument, "invalid tag ID: %v", err)
 	}
 
+	// Validate input
+	if err := grpcerrors.ValidateNotEmpty(req.Name, "name"); err != nil {
+		return nil, err
+	}
+
 	tag, err := s.service.UpdateTag(ctx, id, req.Name)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to update tag: %v", err)
+		return nil, grpcerrors.ToGRPCError(err, "failed to update tag")
 	}
 
 	return &tagv1.UpdateTagResponse{
@@ -94,7 +104,7 @@ func (s *TagServer) DeleteTag(ctx context.Context, req *tagv1.DeleteTagRequest) 
 	}
 
 	if err := s.service.DeleteTag(ctx, id); err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to delete tag: %v", err)
+		return nil, grpcerrors.ToGRPCError(err, "failed to delete tag")
 	}
 
 	return &tagv1.DeleteTagResponse{}, nil
@@ -102,13 +112,17 @@ func (s *TagServer) DeleteTag(ctx context.Context, req *tagv1.DeleteTagRequest) 
 
 // ListTags lists tags with pagination
 func (s *TagServer) ListTags(ctx context.Context, req *tagv1.ListTagsRequest) (*tagv1.ListTagsResponse, error) {
+	// Reject page_token if provided (not yet implemented)
+	if req.PageToken != "" {
+		return nil, status.Errorf(codes.Unimplemented, "page_token is not supported yet")
+	}
+
 	pageSize := int(req.PageSize)
 	if pageSize <= 0 || pageSize > 100 {
 		pageSize = 30
 	}
 
-	// For now, we don't support pagination tokens
-	// Always return the first page
+	// Always return the first page (offset 0) until pagination tokens are implemented
 	offset := 0
 
 	tags, err := s.service.ListTags(ctx, pageSize, offset)

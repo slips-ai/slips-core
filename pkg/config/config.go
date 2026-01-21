@@ -78,3 +78,11 @@ func (c *DatabaseConfig) DatabaseURL() string {
 		c.User, c.Password, c.Host, c.Port, c.DBName, c.SSLMode,
 	)
 }
+
+// SafeDatabaseURL returns a sanitized database connection string for logging
+func (c *DatabaseConfig) SafeDatabaseURL() string {
+	return fmt.Sprintf(
+		"postgres://%s:***@%s:%d/%s?sslmode=%s",
+		c.User, c.Host, c.Port, c.DBName, c.SSLMode,
+	)
+}
