@@ -30,5 +30,4 @@ func NewTag(name string) *Tag {
 // Update updates the tag
 func (t *Tag) Update(name string) {
 	t.Name = name
-	t.UpdatedAt = time.Now()
 }
