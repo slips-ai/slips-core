@@ -1,0 +1,15 @@
+server:
+  grpc_port: 9090
+
+database:
+  host: localhost
+  port: 5432
+  user: postgres
+  password: postgres
+  dbname: slips
+  sslmode: disable
+
+tracing:
+  enabled: true
+  service_name: slips-core
+  endpoint: localhost:4317
