@@ -1,23 +1,23 @@
 version: "2"
 sql:
   - schema: "migrations"
-    queries: "features/task/infra/postgres/queries"
+    queries: "internal/task/infra/postgres/queries"
     engine: "postgresql"
     gen:
       go:
         package: "postgres"
-        out: "features/task/infra/postgres"
+        out: "internal/task/infra/postgres"
         sql_package: "pgx/v5"
         emit_json_tags: true
         emit_interface: true
         emit_empty_slices: true
   - schema: "migrations"
-    queries: "features/tag/infra/postgres/queries"
+    queries: "internal/tag/infra/postgres/queries"
     engine: "postgresql"
     gen:
       go:
         package: "postgres"
-        out: "features/tag/infra/postgres"
+        out: "internal/tag/infra/postgres"
         sql_package: "pgx/v5"
         emit_json_tags: true
         emit_interface: true

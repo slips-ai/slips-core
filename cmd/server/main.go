@@ -11,21 +11,22 @@ import (
 	"syscall"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	taskv1 "github.com/slips-ai/slips-core/gen/proto/task/v1"
-	tagv1 "github.com/slips-ai/slips-core/gen/proto/tag/v1"
+	taskv1 "github.com/slips-ai/slips-core/gen/api/proto/task/v1"
+	tagv1 "github.com/slips-ai/slips-core/gen/api/proto/tag/v1"
 
-	taskapp "github.com/slips-ai/slips-core/features/task/application"
-	taskgrpc "github.com/slips-ai/slips-core/features/task/infra/grpc"
-	taskpg "github.com/slips-ai/slips-core/features/task/infra/postgres"
+	taskapp "github.com/slips-ai/slips-core/internal/task/application"
+	taskgrpc "github.com/slips-ai/slips-core/internal/task/infra/grpc"
+	taskpg "github.com/slips-ai/slips-core/internal/task/infra/postgres"
 
-	tagapp "github.com/slips-ai/slips-core/features/tag/application"
-	taggrpc "github.com/slips-ai/slips-core/features/tag/infra/grpc"
-	tagpg "github.com/slips-ai/slips-core/features/tag/infra/postgres"
+	tagapp "github.com/slips-ai/slips-core/internal/tag/application"
+	taggrpc "github.com/slips-ai/slips-core/internal/tag/infra/grpc"
+	tagpg "github.com/slips-ai/slips-core/internal/tag/infra/postgres"
 
 	"github.com/slips-ai/slips-core/pkg/config"
 	"github.com/slips-ai/slips-core/pkg/logger"
 	"github.com/slips-ai/slips-core/pkg/tracing"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 func main() {
@@ -97,6 +98,9 @@ func main() {
 	// Register services
 	taskv1.RegisterTaskServiceServer(grpcServer, taskServer)
 	tagv1.RegisterTagServiceServer(grpcServer, tagServer)
+
+	// Register reflection service for grpcurl and other tools
+	reflection.Register(grpcServer)
 
 	// Start gRPC server
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", cfg.Server.GRPCPort))

@@ -78,10 +78,12 @@ make all
 
 ### Project Structure
 
+The project follows Go best practices with a clean architecture organized by feature:
+
 ```
 slips-core/
 ├── cmd/server/           # Main application entry point
-├── features/            # Feature modules
+├── internal/            # Private application code
 │   ├── task/           # Task feature
 │   │   ├── domain/     # Task entities and interfaces
 │   │   ├── application/# Task business logic
@@ -90,11 +92,12 @@ slips-core/
 │       ├── domain/     # Tag entities and interfaces
 │       ├── application/# Tag business logic
 │       └── infra/      # Tag infrastructure (gRPC, Postgres)
-├── pkg/                # Shared packages
+├── pkg/                # Shared packages (reusable libraries)
 │   ├── config/        # Configuration loader
 │   ├── logger/        # Logging setup
 │   └── tracing/       # OpenTelemetry setup
-├── proto/             # Protocol Buffer definitions
+├── api/               # API definitions
+│   └── proto/         # Protocol Buffer definitions
 ├── migrations/        # Database migrations
 └── gen/              # Generated code (gitignored)
 ```

@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/slips-ai/slips-core/features/task/domain"
+	"github.com/slips-ai/slips-core/internal/task/domain"
 )
 
 // TaskRepository implements domain.Repository using PostgreSQL

@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	taskv1 "github.com/slips-ai/slips-core/gen/proto/task/v1"
-	"github.com/slips-ai/slips-core/features/task/application"
+	taskv1 "github.com/slips-ai/slips-core/gen/api/proto/task/v1"
+	"github.com/slips-ai/slips-core/internal/task/application"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
