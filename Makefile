@@ -50,8 +50,8 @@ docker-down:
 
 # Database migrations
 # Database URL can be set via DB_URL environment variable
-# Default: postgres://postgres:postgres@localhost:5432/slips?sslmode=disable
-DB_URL ?= postgres://postgres:postgres@localhost:5432/slips?sslmode=disable
+# Default (overridable via DB_USER / DB_PASSWORD): postgres://postgres:postgres@localhost:5432/slips?sslmode=disable
+DB_URL ?= postgres://$${DB_USER:-postgres}:$${DB_PASSWORD:-postgres}@localhost:5432/slips?sslmode=disable
 
 migrate-up:
 	@echo "Running migrations..."
