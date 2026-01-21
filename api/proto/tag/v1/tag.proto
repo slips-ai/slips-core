@@ -1,0 +1,75 @@
+syntax = "proto3";
+
+package tag.v1;
+
+option go_package = "github.com/slips-ai/slips-core/gen/api/proto/tag/v1;tagv1";
+
+import "google/protobuf/timestamp.proto";
+
+// Tag represents a tag entity
+message Tag {
+  string id = 1;
+  string name = 2;
+  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Timestamp updated_at = 4;
+}
+
+// CreateTagRequest is the request message for creating a tag
+message CreateTagRequest {
+  string name = 1;
+}
+
+// CreateTagResponse is the response message for creating a tag
+message CreateTagResponse {
+  Tag tag = 1;
+}
+
+// GetTagRequest is the request message for getting a tag
+message GetTagRequest {
+  string id = 1;
+}
+
+// GetTagResponse is the response message for getting a tag
+message GetTagResponse {
+  Tag tag = 1;
+}
+
+// UpdateTagRequest is the request message for updating a tag
+message UpdateTagRequest {
+  string id = 1;
+  string name = 2;
+}
+
+// UpdateTagResponse is the response message for updating a tag
+message UpdateTagResponse {
+  Tag tag = 1;
+}
+
+// DeleteTagRequest is the request message for deleting a tag
+message DeleteTagRequest {
+  string id = 1;
+}
+
+// DeleteTagResponse is the response message for deleting a tag
+message DeleteTagResponse {}
+
+// ListTagsRequest is the request message for listing tags
+message ListTagsRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+}
+
+// ListTagsResponse is the response message for listing tags
+message ListTagsResponse {
+  repeated Tag tags = 1;
+  string next_page_token = 2;
+}
+
+// TagService provides CRUD operations for tags
+service TagService {
+  rpc CreateTag(CreateTagRequest) returns (CreateTagResponse);
+  rpc GetTag(GetTagRequest) returns (GetTagResponse);
+  rpc UpdateTag(UpdateTagRequest) returns (UpdateTagResponse);
+  rpc DeleteTag(DeleteTagRequest) returns (DeleteTagResponse);
+  rpc ListTags(ListTagsRequest) returns (ListTagsResponse);
+}

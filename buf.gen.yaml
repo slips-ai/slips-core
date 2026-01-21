@@ -1,0 +1,14 @@
+version: v1
+managed:
+  enabled: true
+  go_package_prefix:
+    default: github.com/slips-ai/slips-core/gen/api
+plugins:
+  - plugin: go
+    out: gen/api
+    opt:
+      - paths=source_relative
+  - plugin: go-grpc
+    out: gen/api
+    opt:
+      - paths=source_relative

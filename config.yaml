@@ -1,0 +1,19 @@
+# slips-core configuration
+# WARNING: This file contains sensitive credentials and should not be committed to version control in production.
+# Use environment variables (SLIPS_DATABASE_PASSWORD) or a secrets management system for production deployments.
+
+server:
+  grpc_port: 9090
+
+database:
+  host: localhost
+  port: 5432
+  user: postgres
+  password: CHANGE_ME  # Placeholder only. Set via SLIPS_DATABASE_PASSWORD env var or secrets manager; do not use a real password here.
+  dbname: slips
+  sslmode: disable
+
+tracing:
+  enabled: true
+  service_name: slips-core
+  endpoint: localhost:4317  # OTLP gRPC endpoint
