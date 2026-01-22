@@ -132,26 +132,26 @@ func TestExtractUserID(t *testing.T) {
 	}
 }
 
+// TestParseRSAPublicKey tests parsing of RSA public keys.
 func TestParseRSAPublicKey(t *testing.T) {
-// Test valid RSA public key parsing
-t.Run("valid RSA key", func(t *testing.T) {
-// Generate a test RSA key
-privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
-if err != nil {
-t.Fatalf("failed to generate RSA key: %v", err)
-}
+	t.Run("valid RSA key", func(t *testing.T) {
+		// Generate a test RSA key
+		privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+		if err != nil {
+			t.Fatalf("failed to generate RSA key: %v", err)
+		}
 
-// Encode N and E to base64url
-n := base64.RawURLEncoding.EncodeToString(privateKey.PublicKey.N.Bytes())
-e := base64.RawURLEncoding.EncodeToString(big.NewInt(int64(privateKey.PublicKey.E)).Bytes())
+		// Encode N and E to base64url
+		n := base64.RawURLEncoding.EncodeToString(privateKey.PublicKey.N.Bytes())
+		e := base64.RawURLEncoding.EncodeToString(big.NewInt(int64(privateKey.PublicKey.E)).Bytes())
 
-pubKey, err := parseRSAPublicKey(n, e)
-if err != nil {
-t.Fatalf("parseRSAPublicKey() error = %v", err)
-}
+		pubKey, err := parseRSAPublicKey(n, e)
+		if err != nil {
+			t.Fatalf("parseRSAPublicKey() error = %v", err)
+		}
 
-if pubKey.E != privateKey.PublicKey.E {
-t.Errorf("expected E=%d, got %d", privateKey.PublicKey.E, pubKey.E)
+		if pubKey.E != privateKey.PublicKey.E {
+			t.Errorf("expected E=%d, got %d", privateKey.PublicKey.E, pubKey.E)
 }
 
 if pubKey.N.Cmp(privateKey.PublicKey.N) != 0 {
