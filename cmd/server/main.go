@@ -110,14 +110,16 @@ func main() {
 	
 	// Build interceptor chain in order: auth first, then (optionally) tracing
 	// Auth runs first to reject unauthenticated requests before creating trace spans
+
+	// Build interceptor chain in order: auth first, then (optionally) tracing
+	// Auth runs first to reject unauthenticated requests before creating trace spans
 	interceptors := []grpc.UnaryServerInterceptor{
 		auth.UnaryServerInterceptor(jwtValidator),
 	}
 	if cfg.Tracing.Enabled {
 		interceptors = append(interceptors, tracing.UnaryServerInterceptor())
 	}
-	opts = append(opts, grpc.ChainUnaryInterceptor(interceptors...))
-	
+	opts = append(opts, grpc.UnaryInterceptor(chainUnaryInterceptors(interceptors...)))
 	grpcServer := grpc.NewServer(opts...)
 
 	// Register services
