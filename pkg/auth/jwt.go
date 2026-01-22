@@ -101,6 +101,8 @@ func (v *JWTValidator) FetchJWKS(ctx context.Context) error {
 	defer v.mu.Unlock()
 
 	// Parse and store the public keys
+	// Continue parsing even if some keys fail
+	successCount := 0
 	for _, key := range jwks.Keys {
 		if key.Kty != "RSA" {
 			continue
@@ -108,10 +110,17 @@ func (v *JWTValidator) FetchJWKS(ctx context.Context) error {
 
 		pubKey, err := parseRSAPublicKey(key.N, key.E)
 		if err != nil {
-			return fmt.Errorf("failed to parse RSA public key: %w", err)
+			// Log but continue with other keys
+			fmt.Printf("Warning: failed to parse RSA public key %s: %v\n", key.Kid, err)
+			continue
 		}
 
 		v.keys[key.Kid] = pubKey
+		successCount++
+	}
+
+	if successCount == 0 {
+		return errors.New("no valid RSA keys found in JWKS")
 	}
 
 	return nil
@@ -133,11 +142,15 @@ func parseRSAPublicKey(nStr, eStr string) (*rsa.PublicKey, error) {
 
 	// Convert to big.Int
 	n := new(big.Int).SetBytes(nBytes)
+	e := new(big.Int).SetBytes(eBytes)
 	
-	// Convert e to int
-	var eInt int
-	for _, b := range eBytes {
-		eInt = eInt<<8 + int(b)
+	// Verify e fits in an int (typically RSA uses 65537)
+	if !e.IsInt64() {
+		return nil, fmt.Errorf("RSA exponent too large")
+	}
+	eInt := int(e.Int64())
+	if eInt <= 0 {
+		return nil, fmt.Errorf("invalid RSA exponent: %d", eInt)
 	}
 
 	return &rsa.PublicKey{
@@ -194,7 +207,7 @@ func (v *JWTValidator) ValidateToken(tokenString string) (*Claims, error) {
 
 	// Validate expiration
 	if claims.ExpiresAt != nil && claims.ExpiresAt.Before(time.Now()) {
-		return nil, errors.New("token has expired")
+		return nil, ErrInvalidToken
 	}
 
 	return claims, nil

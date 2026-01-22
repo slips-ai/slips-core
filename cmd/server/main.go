@@ -100,6 +100,8 @@ func main() {
 	jwtValidator := auth.NewJWTValidator(cfg.Auth.JWKSEndpoint, cfg.Auth.ExpectedIssuer)
 	
 	// Fetch JWKS keys
+	// NOTE: Keys are only fetched at startup. In production, implement periodic refresh
+	// or on-demand fetching when unknown 'kid' is encountered to handle key rotation.
 	if err := jwtValidator.FetchJWKS(ctx); err != nil {
 		logr.Error("Failed to fetch JWKS", "error", err)
 		os.Exit(1)
@@ -121,7 +123,8 @@ func main() {
 	// Create gRPC server with interceptors
 	var opts []grpc.ServerOption
 	
-	// Add auth interceptor
+	// Add interceptors in order: auth first, then tracing
+	// Auth runs first to reject unauthenticated requests before creating trace spans
 	opts = append(opts, grpc.UnaryInterceptor(chainUnaryInterceptors(
 		auth.UnaryServerInterceptor(jwtValidator),
 		tracing.UnaryServerInterceptor(),
