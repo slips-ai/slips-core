@@ -10,6 +10,7 @@ import (
 type Tag struct {
 	ID        uuid.UUID
 	Name      string
+	OwnerID   string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
@@ -17,13 +18,11 @@ type Tag struct {
 // NewTag creates a new tag
 // Note: CreatedAt and UpdatedAt timestamps are not set here.
 // They will be populated by the database on insertion (DEFAULT NOW()).
-func NewTag(name string) *Tag {
-	now := time.Now()
+func NewTag(name, ownerID string) *Tag {
 	return &Tag{
-		ID:        uuid.New(),
-		Name:      name,
-		CreatedAt: now,
-		UpdatedAt: now,
+		ID:      uuid.New(),
+		Name:    name,
+		OwnerID: ownerID,
 	}
 }
 

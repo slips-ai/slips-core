@@ -13,6 +13,7 @@ type Tag struct {
 	Name      string             `json:"name"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+	OwnerID   string             `json:"owner_id"`
 }
 
 type Task struct {
@@ -21,4 +22,5 @@ type Task struct {
 	Notes     string             `json:"notes"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+	OwnerID   string             `json:"owner_id"`
 }

@@ -6,16 +6,14 @@ package postgres
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Querier interface {
-	CreateTag(ctx context.Context, name string) (Tag, error)
-	DeleteTag(ctx context.Context, id pgtype.UUID) error
-	GetTag(ctx context.Context, id pgtype.UUID) (Tag, error)
-	ListTags(ctx context.Context, arg ListTagsParams) ([]Tag, error)
-	UpdateTag(ctx context.Context, arg UpdateTagParams) (Tag, error)
+	CreateTag(ctx context.Context, arg CreateTagParams) (CreateTagRow, error)
+	DeleteTag(ctx context.Context, arg DeleteTagParams) error
+	GetTag(ctx context.Context, arg GetTagParams) (GetTagRow, error)
+	ListTags(ctx context.Context, arg ListTagsParams) ([]ListTagsRow, error)
+	UpdateTag(ctx context.Context, arg UpdateTagParams) (UpdateTagRow, error)
 }
 
 var _ Querier = (*Queries)(nil)

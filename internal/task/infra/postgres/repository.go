@@ -24,8 +24,9 @@ func NewTaskRepository(pool *pgxpool.Pool) *TaskRepository {
 // Create creates a new task
 func (r *TaskRepository) Create(ctx context.Context, task *domain.Task) error {
 	result, err := r.queries.CreateTask(ctx, CreateTaskParams{
-		Title: task.Title,
-		Notes: task.Notes,
+		Title:   task.Title,
+		Notes:   task.Notes,
+		OwnerID: task.OwnerID,
 	})
 	if err != nil {
 		return err
@@ -42,13 +43,16 @@ func (r *TaskRepository) Create(ctx context.Context, task *domain.Task) error {
 }
 
 // Get retrieves a task by ID
-func (r *TaskRepository) Get(ctx context.Context, id uuid.UUID) (*domain.Task, error) {
+func (r *TaskRepository) Get(ctx context.Context, id uuid.UUID, ownerID string) (*domain.Task, error) {
 	pgID := pgtype.UUID{}
 	if err := pgID.Scan(id[:]); err != nil {
 		return nil, err
 	}
 
-	result, err := r.queries.GetTask(ctx, pgID)
+	result, err := r.queries.GetTask(ctx, GetTaskParams{
+		ID:      pgID,
+		OwnerID: ownerID,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -62,6 +66,7 @@ func (r *TaskRepository) Get(ctx context.Context, id uuid.UUID) (*domain.Task, e
 		ID:        taskID,
 		Title:     result.Title,
 		Notes:     result.Notes,
+		OwnerID:   result.OwnerID,
 		CreatedAt: result.CreatedAt.Time,
 		UpdatedAt: result.UpdatedAt.Time,
 	}, nil
@@ -75,9 +80,10 @@ func (r *TaskRepository) Update(ctx context.Context, task *domain.Task) error {
 	}
 
 	result, err := r.queries.UpdateTask(ctx, UpdateTaskParams{
-		ID:    pgID,
-		Title: task.Title,
-		Notes: task.Notes,
+		ID:      pgID,
+		Title:   task.Title,
+		Notes:   task.Notes,
+		OwnerID: task.OwnerID,
 	})
 	if err != nil {
 		return err
@@ -88,16 +94,19 @@ func (r *TaskRepository) Update(ctx context.Context, task *domain.Task) error {
 }
 
 // Delete deletes a task
-func (r *TaskRepository) Delete(ctx context.Context, id uuid.UUID) error {
+func (r *TaskRepository) Delete(ctx context.Context, id uuid.UUID, ownerID string) error {
 	pgID := pgtype.UUID{}
 	if err := pgID.Scan(id[:]); err != nil {
 		return err
 	}
-	return r.queries.DeleteTask(ctx, pgID)
+	return r.queries.DeleteTask(ctx, DeleteTaskParams{
+		ID:      pgID,
+		OwnerID: ownerID,
+	})
 }
 
 // List lists tasks with pagination
-func (r *TaskRepository) List(ctx context.Context, limit, offset int) ([]*domain.Task, error) {
+func (r *TaskRepository) List(ctx context.Context, ownerID string, limit, offset int) ([]*domain.Task, error) {
 	// Validate parameters to prevent negative values and potential overflow
 	if limit < 0 {
 		limit = 0
@@ -108,8 +117,9 @@ func (r *TaskRepository) List(ctx context.Context, limit, offset int) ([]*domain
 
 	// Convert to int32 (validation is done at gRPC layer)
 	results, err := r.queries.ListTasks(ctx, ListTasksParams{
-		Limit:  int32(limit),
-		Offset: int32(offset),
+		OwnerID: ownerID,
+		Limit:   int32(limit),
+		Offset:  int32(offset),
 	})
 	if err != nil {
 		return nil, err
@@ -125,6 +135,7 @@ func (r *TaskRepository) List(ctx context.Context, limit, offset int) ([]*domain
 			ID:        taskID,
 			Title:     result.Title,
 			Notes:     result.Notes,
+			OwnerID:   result.OwnerID,
 			CreatedAt: result.CreatedAt.Time,
 			UpdatedAt: result.UpdatedAt.Time,
 		}

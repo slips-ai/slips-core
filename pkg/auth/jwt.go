@@ -1,0 +1,250 @@
+package auth
+
+import (
+	"context"
+	"crypto/rsa"
+	"encoding/base64"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"math/big"
+	"net/http"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/golang-jwt/jwt/v5"
+)
+
+var (
+	// ErrInvalidToken is returned when the token is invalid
+	ErrInvalidToken = errors.New("invalid token")
+	// ErrInvalidTokenType is returned when token type is not 'access'
+	ErrInvalidTokenType = errors.New("token type must be 'access'")
+	// ErrInvalidIssuer is returned when token issuer doesn't match
+	ErrInvalidIssuer = errors.New("invalid token issuer")
+)
+
+// JWKSKey represents a key in the JWKS
+type JWKSKey struct {
+	Kid string   `json:"kid"`
+	Kty string   `json:"kty"`
+	Alg string   `json:"alg"`
+	Use string   `json:"use"`
+	N   string   `json:"n"`
+	E   string   `json:"e"`
+	X5c []string `json:"x5c,omitempty"`
+}
+
+// JWKS represents the JSON Web Key Set
+type JWKS struct {
+	Keys []JWKSKey `json:"keys"`
+}
+
+// Claims represents Identra JWT claims
+// This matches Identra's StandardClaims structure with:
+// - typ: token type ("access" or "refresh")
+// - uid: user ID (also available as sub/Subject)
+type Claims struct {
+	jwt.RegisteredClaims
+	Type string `json:"typ,omitempty"` // Token type: "access" or "refresh"
+	UID  string `json:"uid,omitempty"` // User ID (Identra UID)
+}
+
+// JWTValidator validates Identra JWTs using JWKS
+type JWTValidator struct {
+	jwksURL       string
+	expectedIssuer string
+	keys          map[string]*rsa.PublicKey
+	mu            sync.RWMutex
+	httpClient    *http.Client
+}
+
+// NewJWTValidator creates a new JWT validator
+func NewJWTValidator(jwksURL, expectedIssuer string) *JWTValidator {
+	return &JWTValidator{
+		jwksURL:       jwksURL,
+		expectedIssuer: expectedIssuer,
+		keys:          make(map[string]*rsa.PublicKey),
+		httpClient: &http.Client{
+			Timeout: 10 * time.Second,
+		},
+	}
+}
+
+// FetchJWKS fetches the JWKS from the Identra endpoint
+func (v *JWTValidator) FetchJWKS(ctx context.Context) error {
+	req, err := http.NewRequestWithContext(ctx, "GET", v.jwksURL, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	resp, err := v.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to fetch JWKS: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to fetch JWKS: status %d", resp.StatusCode)
+	}
+
+	// Limit response body size to prevent memory exhaustion
+	// 1MB should be more than sufficient for a JWKS response
+	limitedBody := io.LimitReader(resp.Body, 1024*1024)
+	body, err := io.ReadAll(limitedBody)
+	if err != nil {
+		return fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	var jwks JWKS
+	if err := json.Unmarshal(body, &jwks); err != nil {
+		return fmt.Errorf("failed to unmarshal JWKS: %w", err)
+	}
+
+	v.mu.Lock()
+	defer v.mu.Unlock()
+
+	// Parse and store the public keys
+	for _, key := range jwks.Keys {
+		if key.Kty != "RSA" {
+			continue
+		}
+
+		pubKey, err := parseRSAPublicKey(key.N, key.E)
+		if err != nil {
+			return fmt.Errorf("failed to parse RSA public key: %w", err)
+		}
+
+		v.keys[key.Kid] = pubKey
+	}
+
+	return nil
+}
+
+// parseRSAPublicKey parses RSA public key from n and e
+func parseRSAPublicKey(nStr, eStr string) (*rsa.PublicKey, error) {
+	// Decode base64url encoded n
+	nBytes, err := base64.RawURLEncoding.DecodeString(nStr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode n: %w", err)
+	}
+
+	// Decode base64url encoded e
+	eBytes, err := base64.RawURLEncoding.DecodeString(eStr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode e: %w", err)
+	}
+
+	// Convert to big.Int
+	n := new(big.Int).SetBytes(nBytes)
+	e := new(big.Int).SetBytes(eBytes)
+	
+	// Verify e fits in an int (typically RSA uses 65537)
+	if !e.IsInt64() {
+		return nil, fmt.Errorf("RSA exponent too large")
+	}
+	eInt64 := e.Int64()
+	
+	// Common RSA exponents are small (e.g., 65537), verify it's reasonable
+	const maxInt32 = int64(1<<31 - 1)
+	if eInt64 > maxInt32 || eInt64 <= 0 {
+		return nil, fmt.Errorf("invalid RSA exponent: %d", eInt64)
+	}
+	eInt := int(eInt64)
+
+	return &rsa.PublicKey{
+		N: n,
+		E: eInt,
+	}, nil
+}
+
+// ValidateToken validates an Identra JWT token
+// The token must:
+// - Be signed with RS256 using a key from the JWKS
+// - Have typ="access" (refresh tokens are rejected)
+// - Have iss matching expectedIssuer
+// - Not be expired
+func (v *JWTValidator) ValidateToken(tokenString string) (*Claims, error) {
+	// Parse the token
+	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+		// Verify signing method
+		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+
+		// Get the kid from header
+		kid, ok := token.Header["kid"].(string)
+		if !ok {
+			return nil, errors.New("missing kid in token header")
+		}
+
+		// Get the public key
+		v.mu.RLock()
+		pubKey, exists := v.keys[kid]
+		v.mu.RUnlock()
+
+		if !exists {
+			return nil, fmt.Errorf("unknown kid: %s", kid)
+		}
+
+		return pubKey, nil
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("%w: %v", ErrInvalidToken, err)
+	}
+
+	claims, ok := token.Claims.(*Claims)
+	if !ok || !token.Valid {
+		return nil, ErrInvalidToken
+	}
+
+	// Validate token type (must be "access", per Identra spec)
+	if claims.Type != "access" {
+		return nil, ErrInvalidTokenType
+	}
+
+	// Validate issuer
+	if claims.Issuer != v.expectedIssuer {
+		return nil, ErrInvalidIssuer
+	}
+
+	// Validate expiration
+	if claims.ExpiresAt != nil && claims.ExpiresAt.Before(time.Now()) {
+		return nil, errors.New("token has expired")
+	}
+
+	return claims, nil
+}
+
+// ExtractUserID extracts user ID from Identra claims
+// Prefers "sub" claim (standard JWT), but falls back to "uid" (Identra-specific) for compatibility
+func ExtractUserID(claims *Claims) (string, error) {
+	// Prefer sub claim
+	if claims.Subject != "" {
+		return claims.Subject, nil
+	}
+
+	// Fall back to uid
+	if claims.UID != "" {
+		return claims.UID, nil
+	}
+
+	return "", errors.New("no user ID found in token claims")
+}
+
+// ExtractBearerToken extracts the bearer token from the Authorization header
+func ExtractBearerToken(authHeader string) (string, error) {
+	if authHeader == "" {
+		return "", errors.New("missing authorization header")
+	}
+
+	parts := strings.SplitN(authHeader, " ", 2)
+	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+		return "", errors.New("invalid authorization header format")
+	}
+
+	return parts[1], nil
+}

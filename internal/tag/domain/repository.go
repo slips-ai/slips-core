@@ -9,8 +9,8 @@ import (
 // Repository defines the interface for tag persistence
 type Repository interface {
 	Create(ctx context.Context, tag *Tag) error
-	Get(ctx context.Context, id uuid.UUID) (*Tag, error)
+	Get(ctx context.Context, id uuid.UUID, ownerID string) (*Tag, error)
 	Update(ctx context.Context, tag *Tag) error
-	Delete(ctx context.Context, id uuid.UUID) error
-	List(ctx context.Context, limit, offset int) ([]*Tag, error)
+	Delete(ctx context.Context, id uuid.UUID, ownerID string) error
+	List(ctx context.Context, ownerID string, limit, offset int) ([]*Tag, error)
 }

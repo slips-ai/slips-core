@@ -23,6 +23,7 @@ import (
 	taggrpc "github.com/slips-ai/slips-core/internal/tag/infra/grpc"
 	tagpg "github.com/slips-ai/slips-core/internal/tag/infra/postgres"
 
+	"github.com/slips-ai/slips-core/pkg/auth"
 	"github.com/slips-ai/slips-core/pkg/config"
 	"github.com/slips-ai/slips-core/pkg/logger"
 	"github.com/slips-ai/slips-core/pkg/tracing"
@@ -80,6 +81,18 @@ func main() {
 	}
 	logr.Info("Database connected", "host", cfg.Database.Host)
 
+	// Initialize JWT validator
+	jwtValidator := auth.NewJWTValidator(cfg.Auth.JWKSEndpoint, cfg.Auth.ExpectedIssuer)
+	
+	// Fetch JWKS keys
+	// NOTE: Keys are only fetched at startup. In production, implement periodic refresh
+	// or on-demand fetching when unknown 'kid' is encountered to handle key rotation.
+	if err := jwtValidator.FetchJWKS(ctx); err != nil {
+		logr.Error("Failed to fetch JWKS", "error", err)
+		os.Exit(1)
+	}
+	logr.Info("JWT validator initialized", "jwks_endpoint", cfg.Auth.JWKSEndpoint)
+
 	// Initialize repositories
 	taskRepo := taskpg.NewTaskRepository(dbpool)
 	tagRepo := tagpg.NewTagRepository(dbpool)
@@ -92,11 +105,21 @@ func main() {
 	taskServer := taskgrpc.NewTaskServer(taskService)
 	tagServer := taggrpc.NewTagServer(tagService)
 
-	// Create gRPC server with tracing middleware
+	// Create gRPC server with interceptors
 	var opts []grpc.ServerOption
-	if cfg.Tracing.Enabled {
-		opts = append(opts, grpc.UnaryInterceptor(tracing.UnaryServerInterceptor()))
+	
+	// Build interceptor chain in order: auth first, then (optionally) tracing
+	// Auth runs first to reject unauthenticated requests before creating trace spans
+
+	// Build interceptor chain in order: auth first, then (optionally) tracing
+	// Auth runs first to reject unauthenticated requests before creating trace spans
+	interceptors := []grpc.UnaryServerInterceptor{
+		auth.UnaryServerInterceptor(jwtValidator),
 	}
+	if cfg.Tracing.Enabled {
+		interceptors = append(interceptors, tracing.UnaryServerInterceptor())
+	}
+	opts = append(opts, grpc.UnaryInterceptor(chainUnaryInterceptors(interceptors...)))
 	grpcServer := grpc.NewServer(opts...)
 
 	// Register services
