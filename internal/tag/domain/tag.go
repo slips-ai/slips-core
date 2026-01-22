@@ -19,13 +19,10 @@ type Tag struct {
 // Note: CreatedAt and UpdatedAt timestamps are not set here.
 // They will be populated by the database on insertion (DEFAULT NOW()).
 func NewTag(name, ownerID string) *Tag {
-	now := time.Now()
 	return &Tag{
-		ID:        uuid.New(),
-		Name:      name,
-		OwnerID:   ownerID,
-		CreatedAt: now,
-		UpdatedAt: now,
+		ID:      uuid.New(),
+		Name:    name,
+		OwnerID: ownerID,
 	}
 }
 

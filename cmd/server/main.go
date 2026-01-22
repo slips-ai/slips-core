@@ -31,21 +31,6 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
-// chainUnaryInterceptors chains multiple unary interceptors into one
-func chainUnaryInterceptors(interceptors ...grpc.UnaryServerInterceptor) grpc.UnaryServerInterceptor {
-	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-		chain := handler
-		for i := len(interceptors) - 1; i >= 0; i-- {
-			interceptor := interceptors[i]
-			next := chain
-			chain = func(currentCtx context.Context, currentReq interface{}) (interface{}, error) {
-				return interceptor(currentCtx, currentReq, info, next)
-			}
-		}
-		return chain(ctx, req)
-	}
-}
-
 func main() {
 	// Load configuration
 	cfg, err := config.Load("")
@@ -123,12 +108,15 @@ func main() {
 	// Create gRPC server with interceptors
 	var opts []grpc.ServerOption
 	
-	// Add interceptors in order: auth first, then tracing
+	// Build interceptor chain in order: auth first, then (optionally) tracing
 	// Auth runs first to reject unauthenticated requests before creating trace spans
-	opts = append(opts, grpc.UnaryInterceptor(chainUnaryInterceptors(
+	interceptors := []grpc.UnaryServerInterceptor{
 		auth.UnaryServerInterceptor(jwtValidator),
-		tracing.UnaryServerInterceptor(),
-	)))
+	}
+	if cfg.Tracing.Enabled {
+		interceptors = append(interceptors, tracing.UnaryServerInterceptor())
+	}
+	opts = append(opts, grpc.ChainUnaryInterceptor(interceptors...))
 	
 	grpcServer := grpc.NewServer(opts...)
 

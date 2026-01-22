@@ -90,7 +90,10 @@ func (v *JWTValidator) FetchJWKS(ctx context.Context) error {
 		return fmt.Errorf("failed to fetch JWKS: status %d", resp.StatusCode)
 	}
 
-	body, err := io.ReadAll(resp.Body)
+	// Limit response body size to prevent memory exhaustion
+	// 1MB should be more than sufficient for a JWKS response
+	limitedBody := io.LimitReader(resp.Body, 1024*1024)
+	body, err := io.ReadAll(limitedBody)
 	if err != nil {
 		return fmt.Errorf("failed to read response body: %w", err)
 	}
@@ -136,12 +139,20 @@ func parseRSAPublicKey(nStr, eStr string) (*rsa.PublicKey, error) {
 
 	// Convert to big.Int
 	n := new(big.Int).SetBytes(nBytes)
+	e := new(big.Int).SetBytes(eBytes)
 	
-	// Convert e to int
-	var eInt int
-	for _, b := range eBytes {
-		eInt = eInt<<8 + int(b)
+	// Verify e fits in an int (typically RSA uses 65537)
+	if !e.IsInt64() {
+		return nil, fmt.Errorf("RSA exponent too large")
 	}
+	eInt64 := e.Int64()
+	
+	// Common RSA exponents are small (e.g., 65537), verify it's reasonable
+	const maxInt32 = int64(1<<31 - 1)
+	if eInt64 > maxInt32 || eInt64 <= 0 {
+		return nil, fmt.Errorf("invalid RSA exponent: %d", eInt64)
+	}
+	eInt := int(eInt64)
 
 	return &rsa.PublicKey{
 		N: n,
