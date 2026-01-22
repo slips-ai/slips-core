@@ -23,12 +23,28 @@ import (
 	taggrpc "github.com/slips-ai/slips-core/internal/tag/infra/grpc"
 	tagpg "github.com/slips-ai/slips-core/internal/tag/infra/postgres"
 
+	"github.com/slips-ai/slips-core/pkg/auth"
 	"github.com/slips-ai/slips-core/pkg/config"
 	"github.com/slips-ai/slips-core/pkg/logger"
 	"github.com/slips-ai/slips-core/pkg/tracing"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
+
+// chainUnaryInterceptors chains multiple unary interceptors into one
+func chainUnaryInterceptors(interceptors ...grpc.UnaryServerInterceptor) grpc.UnaryServerInterceptor {
+	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+		chain := handler
+		for i := len(interceptors) - 1; i >= 0; i-- {
+			interceptor := interceptors[i]
+			next := chain
+			chain = func(currentCtx context.Context, currentReq interface{}) (interface{}, error) {
+				return interceptor(currentCtx, currentReq, info, next)
+			}
+		}
+		return chain(ctx, req)
+	}
+}
 
 func main() {
 	// Load configuration
@@ -80,6 +96,16 @@ func main() {
 	}
 	logr.Info("Database connected", "host", cfg.Database.Host)
 
+	// Initialize JWT validator
+	jwtValidator := auth.NewJWTValidator(cfg.Auth.JWKSEndpoint, cfg.Auth.ExpectedIssuer)
+	
+	// Fetch JWKS keys
+	if err := jwtValidator.FetchJWKS(ctx); err != nil {
+		logr.Error("Failed to fetch JWKS", "error", err)
+		os.Exit(1)
+	}
+	logr.Info("JWT validator initialized", "jwks_endpoint", cfg.Auth.JWKSEndpoint)
+
 	// Initialize repositories
 	taskRepo := taskpg.NewTaskRepository(dbpool)
 	tagRepo := tagpg.NewTagRepository(dbpool)
@@ -92,11 +118,15 @@ func main() {
 	taskServer := taskgrpc.NewTaskServer(taskService)
 	tagServer := taggrpc.NewTagServer(tagService)
 
-	// Create gRPC server with tracing middleware
+	// Create gRPC server with interceptors
 	var opts []grpc.ServerOption
-	if cfg.Tracing.Enabled {
-		opts = append(opts, grpc.UnaryInterceptor(tracing.UnaryServerInterceptor()))
-	}
+	
+	// Add auth interceptor
+	opts = append(opts, grpc.UnaryInterceptor(chainUnaryInterceptors(
+		auth.UnaryServerInterceptor(jwtValidator),
+		tracing.UnaryServerInterceptor(),
+	)))
+	
 	grpcServer := grpc.NewServer(opts...)
 
 	// Register services

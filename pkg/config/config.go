@@ -11,6 +11,7 @@ type Config struct {
 	Server   ServerConfig   `mapstructure:"server"`
 	Database DatabaseConfig `mapstructure:"database"`
 	Tracing  TracingConfig  `mapstructure:"tracing"`
+	Auth     AuthConfig     `mapstructure:"auth"`
 }
 
 // ServerConfig holds server configuration
@@ -35,6 +36,12 @@ type TracingConfig struct {
 	Endpoint    string `mapstructure:"endpoint"`
 }
 
+// AuthConfig holds authentication configuration
+type AuthConfig struct {
+	JWKSEndpoint   string `mapstructure:"jwks_endpoint"`
+	ExpectedIssuer string `mapstructure:"expected_issuer"`
+}
+
 // Load loads configuration from file and environment
 func Load(configPath string) (*Config, error) {
 	v := viper.New()
@@ -50,6 +57,8 @@ func Load(configPath string) (*Config, error) {
 	v.SetDefault("tracing.enabled", true)
 	v.SetDefault("tracing.service_name", "slips-core")
 	v.SetDefault("tracing.endpoint", "localhost:4317")
+	v.SetDefault("auth.jwks_endpoint", "http://localhost:8080/.well-known/jwks.json")
+	v.SetDefault("auth.expected_issuer", "http://localhost:8080")
 
 	// Read from config file if provided
 	if configPath != "" {

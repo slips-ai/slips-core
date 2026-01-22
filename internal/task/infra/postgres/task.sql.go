@@ -12,23 +12,34 @@ import (
 )
 
 const createTask = `-- name: CreateTask :one
-INSERT INTO tasks (title, notes)
-VALUES ($1, $2)
-RETURNING id, title, notes, created_at, updated_at
+INSERT INTO tasks (title, notes, owner_id)
+VALUES ($1, $2, $3)
+RETURNING id, title, notes, owner_id, created_at, updated_at
 `
 
 type CreateTaskParams struct {
-	Title string `json:"title"`
-	Notes string `json:"notes"`
+	Title   string `json:"title"`
+	Notes   string `json:"notes"`
+	OwnerID string `json:"owner_id"`
 }
 
-func (q *Queries) CreateTask(ctx context.Context, arg CreateTaskParams) (Task, error) {
-	row := q.db.QueryRow(ctx, createTask, arg.Title, arg.Notes)
-	var i Task
+type CreateTaskRow struct {
+	ID        pgtype.UUID        `json:"id"`
+	Title     string             `json:"title"`
+	Notes     string             `json:"notes"`
+	OwnerID   string             `json:"owner_id"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) CreateTask(ctx context.Context, arg CreateTaskParams) (CreateTaskRow, error) {
+	row := q.db.QueryRow(ctx, createTask, arg.Title, arg.Notes, arg.OwnerID)
+	var i CreateTaskRow
 	err := row.Scan(
 		&i.ID,
 		&i.Title,
 		&i.Notes,
+		&i.OwnerID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -37,27 +48,47 @@ func (q *Queries) CreateTask(ctx context.Context, arg CreateTaskParams) (Task, e
 
 const deleteTask = `-- name: DeleteTask :exec
 DELETE FROM tasks
-WHERE id = $1
+WHERE id = $1 AND owner_id = $2
 `
 
-func (q *Queries) DeleteTask(ctx context.Context, id pgtype.UUID) error {
-	_, err := q.db.Exec(ctx, deleteTask, id)
+type DeleteTaskParams struct {
+	ID      pgtype.UUID `json:"id"`
+	OwnerID string      `json:"owner_id"`
+}
+
+func (q *Queries) DeleteTask(ctx context.Context, arg DeleteTaskParams) error {
+	_, err := q.db.Exec(ctx, deleteTask, arg.ID, arg.OwnerID)
 	return err
 }
 
 const getTask = `-- name: GetTask :one
-SELECT id, title, notes, created_at, updated_at
+SELECT id, title, notes, owner_id, created_at, updated_at
 FROM tasks
-WHERE id = $1
+WHERE id = $1 AND owner_id = $2
 `
 
-func (q *Queries) GetTask(ctx context.Context, id pgtype.UUID) (Task, error) {
-	row := q.db.QueryRow(ctx, getTask, id)
-	var i Task
+type GetTaskParams struct {
+	ID      pgtype.UUID `json:"id"`
+	OwnerID string      `json:"owner_id"`
+}
+
+type GetTaskRow struct {
+	ID        pgtype.UUID        `json:"id"`
+	Title     string             `json:"title"`
+	Notes     string             `json:"notes"`
+	OwnerID   string             `json:"owner_id"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) GetTask(ctx context.Context, arg GetTaskParams) (GetTaskRow, error) {
+	row := q.db.QueryRow(ctx, getTask, arg.ID, arg.OwnerID)
+	var i GetTaskRow
 	err := row.Scan(
 		&i.ID,
 		&i.Title,
 		&i.Notes,
+		&i.OwnerID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -65,30 +96,42 @@ func (q *Queries) GetTask(ctx context.Context, id pgtype.UUID) (Task, error) {
 }
 
 const listTasks = `-- name: ListTasks :many
-SELECT id, title, notes, created_at, updated_at
+SELECT id, title, notes, owner_id, created_at, updated_at
 FROM tasks
+WHERE owner_id = $1
 ORDER BY created_at DESC
-LIMIT $1 OFFSET $2
+LIMIT $2 OFFSET $3
 `
 
 type ListTasksParams struct {
-	Limit  int32 `json:"limit"`
-	Offset int32 `json:"offset"`
+	OwnerID string `json:"owner_id"`
+	Limit   int32  `json:"limit"`
+	Offset  int32  `json:"offset"`
 }
 
-func (q *Queries) ListTasks(ctx context.Context, arg ListTasksParams) ([]Task, error) {
-	rows, err := q.db.Query(ctx, listTasks, arg.Limit, arg.Offset)
+type ListTasksRow struct {
+	ID        pgtype.UUID        `json:"id"`
+	Title     string             `json:"title"`
+	Notes     string             `json:"notes"`
+	OwnerID   string             `json:"owner_id"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) ListTasks(ctx context.Context, arg ListTasksParams) ([]ListTasksRow, error) {
+	rows, err := q.db.Query(ctx, listTasks, arg.OwnerID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Task{}
+	items := []ListTasksRow{}
 	for rows.Next() {
-		var i Task
+		var i ListTasksRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Title,
 			&i.Notes,
+			&i.OwnerID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -105,23 +148,39 @@ func (q *Queries) ListTasks(ctx context.Context, arg ListTasksParams) ([]Task, e
 const updateTask = `-- name: UpdateTask :one
 UPDATE tasks
 SET title = $2, notes = $3, updated_at = NOW()
-WHERE id = $1
-RETURNING id, title, notes, created_at, updated_at
+WHERE id = $1 AND owner_id = $4
+RETURNING id, title, notes, owner_id, created_at, updated_at
 `
 
 type UpdateTaskParams struct {
-	ID    pgtype.UUID `json:"id"`
-	Title string      `json:"title"`
-	Notes string      `json:"notes"`
+	ID      pgtype.UUID `json:"id"`
+	Title   string      `json:"title"`
+	Notes   string      `json:"notes"`
+	OwnerID string      `json:"owner_id"`
 }
 
-func (q *Queries) UpdateTask(ctx context.Context, arg UpdateTaskParams) (Task, error) {
-	row := q.db.QueryRow(ctx, updateTask, arg.ID, arg.Title, arg.Notes)
-	var i Task
+type UpdateTaskRow struct {
+	ID        pgtype.UUID        `json:"id"`
+	Title     string             `json:"title"`
+	Notes     string             `json:"notes"`
+	OwnerID   string             `json:"owner_id"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) UpdateTask(ctx context.Context, arg UpdateTaskParams) (UpdateTaskRow, error) {
+	row := q.db.QueryRow(ctx, updateTask,
+		arg.ID,
+		arg.Title,
+		arg.Notes,
+		arg.OwnerID,
+	)
+	var i UpdateTaskRow
 	err := row.Scan(
 		&i.ID,
 		&i.Title,
 		&i.Notes,
+		&i.OwnerID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

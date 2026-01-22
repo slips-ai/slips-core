@@ -23,7 +23,10 @@ func NewTagRepository(pool *pgxpool.Pool) *TagRepository {
 
 // Create creates a new tag
 func (r *TagRepository) Create(ctx context.Context, tag *domain.Tag) error {
-	result, err := r.queries.CreateTag(ctx, tag.Name)
+	result, err := r.queries.CreateTag(ctx, CreateTagParams{
+		Name:    tag.Name,
+		OwnerID: tag.OwnerID,
+	})
 	if err != nil {
 		return err
 	}
@@ -39,13 +42,16 @@ func (r *TagRepository) Create(ctx context.Context, tag *domain.Tag) error {
 }
 
 // Get retrieves a tag by ID
-func (r *TagRepository) Get(ctx context.Context, id uuid.UUID) (*domain.Tag, error) {
+func (r *TagRepository) Get(ctx context.Context, id uuid.UUID, ownerID string) (*domain.Tag, error) {
 	pgID := pgtype.UUID{}
 	if err := pgID.Scan(id[:]); err != nil {
 		return nil, err
 	}
 
-	result, err := r.queries.GetTag(ctx, pgID)
+	result, err := r.queries.GetTag(ctx, GetTagParams{
+		ID:      pgID,
+		OwnerID: ownerID,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -58,6 +64,7 @@ func (r *TagRepository) Get(ctx context.Context, id uuid.UUID) (*domain.Tag, err
 	return &domain.Tag{
 		ID:        tagID,
 		Name:      result.Name,
+		OwnerID:   result.OwnerID,
 		CreatedAt: result.CreatedAt.Time,
 		UpdatedAt: result.UpdatedAt.Time,
 	}, nil
@@ -71,8 +78,9 @@ func (r *TagRepository) Update(ctx context.Context, tag *domain.Tag) error {
 	}
 
 	result, err := r.queries.UpdateTag(ctx, UpdateTagParams{
-		ID:   pgID,
-		Name: tag.Name,
+		ID:      pgID,
+		Name:    tag.Name,
+		OwnerID: tag.OwnerID,
 	})
 	if err != nil {
 		return err
@@ -83,16 +91,19 @@ func (r *TagRepository) Update(ctx context.Context, tag *domain.Tag) error {
 }
 
 // Delete deletes a tag
-func (r *TagRepository) Delete(ctx context.Context, id uuid.UUID) error {
+func (r *TagRepository) Delete(ctx context.Context, id uuid.UUID, ownerID string) error {
 	pgID := pgtype.UUID{}
 	if err := pgID.Scan(id[:]); err != nil {
 		return err
 	}
-	return r.queries.DeleteTag(ctx, pgID)
+	return r.queries.DeleteTag(ctx, DeleteTagParams{
+		ID:      pgID,
+		OwnerID: ownerID,
+	})
 }
 
 // List lists tags with pagination
-func (r *TagRepository) List(ctx context.Context, limit, offset int) ([]*domain.Tag, error) {
+func (r *TagRepository) List(ctx context.Context, ownerID string, limit, offset int) ([]*domain.Tag, error) {
 	// Validate parameters to prevent negative values and potential overflow
 	if limit < 0 {
 		limit = 0
@@ -103,8 +114,9 @@ func (r *TagRepository) List(ctx context.Context, limit, offset int) ([]*domain.
 
 	// Convert to int32 (validation is done at gRPC layer)
 	results, err := r.queries.ListTags(ctx, ListTagsParams{
-		Limit:  int32(limit),
-		Offset: int32(offset),
+		OwnerID: ownerID,
+		Limit:   int32(limit),
+		Offset:  int32(offset),
 	})
 	if err != nil {
 		return nil, err
@@ -119,6 +131,7 @@ func (r *TagRepository) List(ctx context.Context, limit, offset int) ([]*domain.
 		tags[i] = &domain.Tag{
 			ID:        tagID,
 			Name:      result.Name,
+			OwnerID:   result.OwnerID,
 			CreatedAt: result.CreatedAt.Time,
 			UpdatedAt: result.UpdatedAt.Time,
 		}

@@ -17,3 +17,7 @@ tracing:
   enabled: true
   service_name: slips-core
   endpoint: localhost:4317  # OTLP gRPC endpoint
+
+auth:
+  jwks_endpoint: http://localhost:8080/.well-known/jwks.json
+  expected_issuer: http://localhost:8080

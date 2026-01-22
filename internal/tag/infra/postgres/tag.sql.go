@@ -12,17 +12,31 @@ import (
 )
 
 const createTag = `-- name: CreateTag :one
-INSERT INTO tags (name)
-VALUES ($1)
-RETURNING id, name, created_at, updated_at
+INSERT INTO tags (name, owner_id)
+VALUES ($1, $2)
+RETURNING id, name, owner_id, created_at, updated_at
 `
 
-func (q *Queries) CreateTag(ctx context.Context, name string) (Tag, error) {
-	row := q.db.QueryRow(ctx, createTag, name)
-	var i Tag
+type CreateTagParams struct {
+	Name    string `json:"name"`
+	OwnerID string `json:"owner_id"`
+}
+
+type CreateTagRow struct {
+	ID        pgtype.UUID        `json:"id"`
+	Name      string             `json:"name"`
+	OwnerID   string             `json:"owner_id"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) CreateTag(ctx context.Context, arg CreateTagParams) (CreateTagRow, error) {
+	row := q.db.QueryRow(ctx, createTag, arg.Name, arg.OwnerID)
+	var i CreateTagRow
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.OwnerID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -31,26 +45,45 @@ func (q *Queries) CreateTag(ctx context.Context, name string) (Tag, error) {
 
 const deleteTag = `-- name: DeleteTag :exec
 DELETE FROM tags
-WHERE id = $1
+WHERE id = $1 AND owner_id = $2
 `
 
-func (q *Queries) DeleteTag(ctx context.Context, id pgtype.UUID) error {
-	_, err := q.db.Exec(ctx, deleteTag, id)
+type DeleteTagParams struct {
+	ID      pgtype.UUID `json:"id"`
+	OwnerID string      `json:"owner_id"`
+}
+
+func (q *Queries) DeleteTag(ctx context.Context, arg DeleteTagParams) error {
+	_, err := q.db.Exec(ctx, deleteTag, arg.ID, arg.OwnerID)
 	return err
 }
 
 const getTag = `-- name: GetTag :one
-SELECT id, name, created_at, updated_at
+SELECT id, name, owner_id, created_at, updated_at
 FROM tags
-WHERE id = $1
+WHERE id = $1 AND owner_id = $2
 `
 
-func (q *Queries) GetTag(ctx context.Context, id pgtype.UUID) (Tag, error) {
-	row := q.db.QueryRow(ctx, getTag, id)
-	var i Tag
+type GetTagParams struct {
+	ID      pgtype.UUID `json:"id"`
+	OwnerID string      `json:"owner_id"`
+}
+
+type GetTagRow struct {
+	ID        pgtype.UUID        `json:"id"`
+	Name      string             `json:"name"`
+	OwnerID   string             `json:"owner_id"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) GetTag(ctx context.Context, arg GetTagParams) (GetTagRow, error) {
+	row := q.db.QueryRow(ctx, getTag, arg.ID, arg.OwnerID)
+	var i GetTagRow
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.OwnerID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -58,29 +91,40 @@ func (q *Queries) GetTag(ctx context.Context, id pgtype.UUID) (Tag, error) {
 }
 
 const listTags = `-- name: ListTags :many
-SELECT id, name, created_at, updated_at
+SELECT id, name, owner_id, created_at, updated_at
 FROM tags
+WHERE owner_id = $1
 ORDER BY name ASC
-LIMIT $1 OFFSET $2
+LIMIT $2 OFFSET $3
 `
 
 type ListTagsParams struct {
-	Limit  int32 `json:"limit"`
-	Offset int32 `json:"offset"`
+	OwnerID string `json:"owner_id"`
+	Limit   int32  `json:"limit"`
+	Offset  int32  `json:"offset"`
 }
 
-func (q *Queries) ListTags(ctx context.Context, arg ListTagsParams) ([]Tag, error) {
-	rows, err := q.db.Query(ctx, listTags, arg.Limit, arg.Offset)
+type ListTagsRow struct {
+	ID        pgtype.UUID        `json:"id"`
+	Name      string             `json:"name"`
+	OwnerID   string             `json:"owner_id"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) ListTags(ctx context.Context, arg ListTagsParams) ([]ListTagsRow, error) {
+	rows, err := q.db.Query(ctx, listTags, arg.OwnerID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Tag{}
+	items := []ListTagsRow{}
 	for rows.Next() {
-		var i Tag
+		var i ListTagsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
+			&i.OwnerID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -97,21 +141,31 @@ func (q *Queries) ListTags(ctx context.Context, arg ListTagsParams) ([]Tag, erro
 const updateTag = `-- name: UpdateTag :one
 UPDATE tags
 SET name = $2, updated_at = NOW()
-WHERE id = $1
-RETURNING id, name, created_at, updated_at
+WHERE id = $1 AND owner_id = $3
+RETURNING id, name, owner_id, created_at, updated_at
 `
 
 type UpdateTagParams struct {
-	ID   pgtype.UUID `json:"id"`
-	Name string      `json:"name"`
+	ID      pgtype.UUID `json:"id"`
+	Name    string      `json:"name"`
+	OwnerID string      `json:"owner_id"`
 }
 
-func (q *Queries) UpdateTag(ctx context.Context, arg UpdateTagParams) (Tag, error) {
-	row := q.db.QueryRow(ctx, updateTag, arg.ID, arg.Name)
-	var i Tag
+type UpdateTagRow struct {
+	ID        pgtype.UUID        `json:"id"`
+	Name      string             `json:"name"`
+	OwnerID   string             `json:"owner_id"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) UpdateTag(ctx context.Context, arg UpdateTagParams) (UpdateTagRow, error) {
+	row := q.db.QueryRow(ctx, updateTag, arg.ID, arg.Name, arg.OwnerID)
+	var i UpdateTagRow
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.OwnerID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

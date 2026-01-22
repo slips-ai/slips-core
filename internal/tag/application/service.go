@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/slips-ai/slips-core/internal/tag/domain"
+	"github.com/slips-ai/slips-core/pkg/auth"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -34,14 +35,22 @@ func (s *Service) CreateTag(ctx context.Context, name string) (*domain.Tag, erro
 	))
 	defer span.End()
 
-	tag := domain.NewTag(name)
+	// Extract user ID from context
+	userID, err := auth.GetUserID(ctx)
+	if err != nil {
+		s.logger.ErrorContext(ctx, "failed to get user ID from context", "error", err)
+		span.RecordError(err)
+		return nil, err
+	}
+
+	tag := domain.NewTag(name, userID)
 	if err := s.repo.Create(ctx, tag); err != nil {
 		s.logger.ErrorContext(ctx, "failed to create tag", "error", err)
 		span.RecordError(err)
 		return nil, err
 	}
 
-	s.logger.InfoContext(ctx, "tag created", "id", tag.ID)
+	s.logger.InfoContext(ctx, "tag created", "id", tag.ID, "owner_id", userID)
 	return tag, nil
 }
 
@@ -52,7 +61,15 @@ func (s *Service) GetTag(ctx context.Context, id uuid.UUID) (*domain.Tag, error)
 	))
 	defer span.End()
 
-	tag, err := s.repo.Get(ctx, id)
+	// Extract user ID from context
+	userID, err := auth.GetUserID(ctx)
+	if err != nil {
+		s.logger.ErrorContext(ctx, "failed to get user ID from context", "error", err)
+		span.RecordError(err)
+		return nil, err
+	}
+
+	tag, err := s.repo.Get(ctx, id, userID)
 	if err != nil {
 		s.logger.ErrorContext(ctx, "failed to get tag", "id", id, "error", err)
 		span.RecordError(err)
@@ -70,7 +87,15 @@ func (s *Service) UpdateTag(ctx context.Context, id uuid.UUID, name string) (*do
 	))
 	defer span.End()
 
-	tag, err := s.repo.Get(ctx, id)
+	// Extract user ID from context
+	userID, err := auth.GetUserID(ctx)
+	if err != nil {
+		s.logger.ErrorContext(ctx, "failed to get user ID from context", "error", err)
+		span.RecordError(err)
+		return nil, err
+	}
+
+	tag, err := s.repo.Get(ctx, id, userID)
 	if err != nil {
 		s.logger.ErrorContext(ctx, "failed to get tag for update", "id", id, "error", err)
 		span.RecordError(err)
@@ -95,7 +120,15 @@ func (s *Service) DeleteTag(ctx context.Context, id uuid.UUID) error {
 	))
 	defer span.End()
 
-	if err := s.repo.Delete(ctx, id); err != nil {
+	// Extract user ID from context
+	userID, err := auth.GetUserID(ctx)
+	if err != nil {
+		s.logger.ErrorContext(ctx, "failed to get user ID from context", "error", err)
+		span.RecordError(err)
+		return err
+	}
+
+	if err := s.repo.Delete(ctx, id, userID); err != nil {
 		s.logger.ErrorContext(ctx, "failed to delete tag", "id", id, "error", err)
 		span.RecordError(err)
 		return err
@@ -113,7 +146,15 @@ func (s *Service) ListTags(ctx context.Context, limit, offset int) ([]*domain.Ta
 	))
 	defer span.End()
 
-	tags, err := s.repo.List(ctx, limit, offset)
+	// Extract user ID from context
+	userID, err := auth.GetUserID(ctx)
+	if err != nil {
+		s.logger.ErrorContext(ctx, "failed to get user ID from context", "error", err)
+		span.RecordError(err)
+		return nil, err
+	}
+
+	tags, err := s.repo.List(ctx, userID, limit, offset)
 	if err != nil {
 		s.logger.ErrorContext(ctx, "failed to list tags", "error", err)
 		span.RecordError(err)

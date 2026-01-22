@@ -9,8 +9,8 @@ import (
 // Repository defines the interface for task persistence
 type Repository interface {
 	Create(ctx context.Context, task *Task) error
-	Get(ctx context.Context, id uuid.UUID) (*Task, error)
+	Get(ctx context.Context, id uuid.UUID, ownerID string) (*Task, error)
 	Update(ctx context.Context, task *Task) error
-	Delete(ctx context.Context, id uuid.UUID) error
-	List(ctx context.Context, limit, offset int) ([]*Task, error)
+	Delete(ctx context.Context, id uuid.UUID, ownerID string) error
+	List(ctx context.Context, ownerID string, limit, offset int) ([]*Task, error)
 }
