@@ -42,14 +42,17 @@ type JWKS struct {
 	Keys []JWKSKey `json:"keys"`
 }
 
-// Claims represents the JWT claims we care about
+// Claims represents Identra JWT claims
+// This matches Identra's StandardClaims structure with:
+// - typ: token type ("access" or "refresh")
+// - uid: user ID (also available as sub/Subject)
 type Claims struct {
 	jwt.RegisteredClaims
-	Type string `json:"typ,omitempty"`
-	UID  string `json:"uid,omitempty"`
+	Type string `json:"typ,omitempty"` // Token type: "access" or "refresh"
+	UID  string `json:"uid,omitempty"` // User ID (Identra UID)
 }
 
-// JWTValidator validates JWTs using Identra JWKS
+// JWTValidator validates Identra JWTs using JWKS
 type JWTValidator struct {
 	jwksURL       string
 	expectedIssuer string
@@ -101,8 +104,6 @@ func (v *JWTValidator) FetchJWKS(ctx context.Context) error {
 	defer v.mu.Unlock()
 
 	// Parse and store the public keys
-	// Continue parsing even if some keys fail
-	successCount := 0
 	for _, key := range jwks.Keys {
 		if key.Kty != "RSA" {
 			continue
@@ -110,17 +111,10 @@ func (v *JWTValidator) FetchJWKS(ctx context.Context) error {
 
 		pubKey, err := parseRSAPublicKey(key.N, key.E)
 		if err != nil {
-			// Log but continue with other keys
-			fmt.Printf("Warning: failed to parse RSA public key %s: %v\n", key.Kid, err)
-			continue
+			return fmt.Errorf("failed to parse RSA public key: %w", err)
 		}
 
 		v.keys[key.Kid] = pubKey
-		successCount++
-	}
-
-	if successCount == 0 {
-		return errors.New("no valid RSA keys found in JWKS")
 	}
 
 	return nil
@@ -142,15 +136,11 @@ func parseRSAPublicKey(nStr, eStr string) (*rsa.PublicKey, error) {
 
 	// Convert to big.Int
 	n := new(big.Int).SetBytes(nBytes)
-	e := new(big.Int).SetBytes(eBytes)
 	
-	// Verify e fits in an int (typically RSA uses 65537)
-	if !e.IsInt64() {
-		return nil, fmt.Errorf("RSA exponent too large")
-	}
-	eInt := int(e.Int64())
-	if eInt <= 0 {
-		return nil, fmt.Errorf("invalid RSA exponent: %d", eInt)
+	// Convert e to int
+	var eInt int
+	for _, b := range eBytes {
+		eInt = eInt<<8 + int(b)
 	}
 
 	return &rsa.PublicKey{
@@ -159,7 +149,12 @@ func parseRSAPublicKey(nStr, eStr string) (*rsa.PublicKey, error) {
 	}, nil
 }
 
-// ValidateToken validates a JWT token
+// ValidateToken validates an Identra JWT token
+// The token must:
+// - Be signed with RS256 using a key from the JWKS
+// - Have typ="access" (refresh tokens are rejected)
+// - Have iss matching expectedIssuer
+// - Not be expired
 func (v *JWTValidator) ValidateToken(tokenString string) (*Claims, error) {
 	// Parse the token
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
@@ -195,7 +190,7 @@ func (v *JWTValidator) ValidateToken(tokenString string) (*Claims, error) {
 		return nil, ErrInvalidToken
 	}
 
-	// Validate token type (must be "access")
+	// Validate token type (must be "access", per Identra spec)
 	if claims.Type != "access" {
 		return nil, ErrInvalidTokenType
 	}
@@ -207,14 +202,14 @@ func (v *JWTValidator) ValidateToken(tokenString string) (*Claims, error) {
 
 	// Validate expiration
 	if claims.ExpiresAt != nil && claims.ExpiresAt.Before(time.Now()) {
-		return nil, ErrInvalidToken
+		return nil, errors.New("token has expired")
 	}
 
 	return claims, nil
 }
 
-// ExtractUserID extracts user ID from claims
-// Prefers "sub" claim, but falls back to "uid" for compatibility
+// ExtractUserID extracts user ID from Identra claims
+// Prefers "sub" claim (standard JWT), but falls back to "uid" (Identra-specific) for compatibility
 func ExtractUserID(claims *Claims) (string, error) {
 	// Prefer sub claim
 	if claims.Subject != "" {

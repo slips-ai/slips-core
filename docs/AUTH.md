@@ -4,7 +4,7 @@ This document describes the JWT authentication and user-scoped resource implemen
 
 ## Overview
 
-Tasks and Tags in slips-core are now user-scoped, meaning each user can only access their own data. Authentication is performed using JWT tokens from Identra, an identity provider.
+Tasks and Tags in slips-core are now user-scoped, meaning each user can only access their own data. Authentication is performed using JWT tokens from [Identra](https://github.com/poly-workshop/identra), an identity provider.
 
 ## Key Components
 
@@ -19,12 +19,20 @@ Migration: `migrations/002_add_owner_id.up.sql`
 
 ### 2. JWT Validator (`pkg/auth/jwt.go`)
 
-The JWT validator:
+The JWT validator implements Identra token validation:
 - Fetches JWKS (JSON Web Key Set) from Identra
-- Validates JWT tokens using RSA public keys
+- Validates JWT tokens using RSA signatures (RS256)
 - Verifies token type is "access" (rejects "refresh" tokens)
 - Verifies issuer matches expected Identra instance
 - Extracts user ID from `sub` claim (or `uid` for compatibility)
+
+**Token Format**: The implementation uses Identra's JWT token format with claims:
+- `typ`: Token type ("access" or "refresh")
+- `uid`: User ID (Identra UID, same as `sub`)
+- `sub`: Standard JWT subject claim (user ID)
+- `iss`: Issuer (Identra instance URL)
+- `exp`: Expiration timestamp
+- `jti`: Token ID
 
 ### 3. gRPC Interceptor (`pkg/auth/interceptor.go`)
 
