@@ -100,14 +100,6 @@ func TestExtractUserID(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "extract from uid claim",
-			claims: &Claims{
-				UID: "user-789",
-			},
-			want:    "user-789",
-			wantErr: false,
-		},
-		{
 			name: "prefer user_id over sub",
 			claims: &Claims{
 				UserID: "user-id",
@@ -116,26 +108,6 @@ func TestExtractUserID(t *testing.T) {
 				},
 			},
 			want:    "user-id",
-			wantErr: false,
-		},
-		{
-			name: "prefer user_id over uid",
-			claims: &Claims{
-				UserID: "user-id",
-				UID:    "user-uid",
-			},
-			want:    "user-id",
-			wantErr: false,
-		},
-		{
-			name: "prefer sub over uid",
-			claims: &Claims{
-				RegisteredClaims: jwt.RegisteredClaims{
-					Subject: "user-sub",
-				},
-				UID: "user-uid",
-			},
-			want:    "user-sub",
 			wantErr: false,
 		},
 		{

@@ -46,12 +46,10 @@ type JWKS struct {
 // This matches Identra's StandardClaims structure with:
 // - typ: token type ("access" or "refresh")
 // - user_id: user ID (primary identifier from Identra)
-// - uid: user ID (legacy field, kept for backward compatibility)
 type Claims struct {
 	jwt.RegisteredClaims
 	Type   string `json:"typ,omitempty"`     // Token type: "access" or "refresh"
 	UserID string `json:"user_id,omitempty"` // User ID (Identra user_id)
-	UID    string `json:"uid,omitempty"`     // User ID (legacy, for backward compatibility)
 }
 
 // JWTValidator validates Identra JWTs using JWKS
@@ -222,7 +220,7 @@ func (v *JWTValidator) ValidateToken(tokenString string) (*Claims, error) {
 }
 
 // ExtractUserID extracts user ID from Identra claims
-// Priority order: user_id (primary), sub (standard JWT), uid (legacy)
+// Priority order: user_id (primary), sub (standard JWT)
 func ExtractUserID(claims *Claims) (string, error) {
 	// Prefer user_id claim (Identra primary identifier)
 	if claims.UserID != "" {
@@ -232,11 +230,6 @@ func ExtractUserID(claims *Claims) (string, error) {
 	// Fall back to sub claim (standard JWT)
 	if claims.Subject != "" {
 		return claims.Subject, nil
-	}
-
-	// Fall back to uid (legacy)
-	if claims.UID != "" {
-		return claims.UID, nil
 	}
 
 	return "", errors.New("no user ID found in token claims")
