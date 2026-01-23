@@ -20,4 +20,4 @@ tracing:
 
 auth:
   jwks_endpoint: http://localhost:8080/.well-known/jwks.json
-  expected_issuer: http://localhost:8080
+  expected_issuer: identra
