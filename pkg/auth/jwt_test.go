@@ -82,32 +82,32 @@ func TestExtractUserID(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "extract from sub claim",
+			name: "extract from user_id claim",
 			claims: &Claims{
-				RegisteredClaims: jwt.RegisteredClaims{
-					Subject: "user-123",
-				},
+				UserID: "user-123",
 			},
 			want:    "user-123",
 			wantErr: false,
 		},
 		{
-			name: "extract from uid claim",
+			name: "extract from sub claim",
 			claims: &Claims{
-				UID: "user-456",
+				RegisteredClaims: jwt.RegisteredClaims{
+					Subject: "user-456",
+				},
 			},
 			want:    "user-456",
 			wantErr: false,
 		},
 		{
-			name: "prefer sub over uid",
+			name: "prefer user_id over sub",
 			claims: &Claims{
+				UserID: "user-id",
 				RegisteredClaims: jwt.RegisteredClaims{
 					Subject: "user-sub",
 				},
-				UID: "user-uid",
 			},
-			want:    "user-sub",
+			want:    "user-id",
 			wantErr: false,
 		},
 		{
@@ -288,7 +288,7 @@ Subject:   "user-123",
 ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
 },
 Type: tc.tokenType,
-UID:  "user-123",
+UserID: "user-123",
 }
 
 token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
@@ -330,7 +330,7 @@ Subject:   "user-123",
 ExpiresAt: jwt.NewNumericDate(time.Now().Add(-time.Hour)), // Expired 1 hour ago
 },
 Type: "access",
-UID:  "user-123",
+UserID: "user-123",
 }
 
 token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
@@ -364,9 +364,9 @@ tokenIssuer    string
 expectedIssuer string
 shouldError    bool
 }{
-{"matching issuer", "https://identra.example.com", "https://identra.example.com", false},
-{"mismatched issuer", "https://evil.com", "https://identra.example.com", true},
-{"empty issuer", "", "https://identra.example.com", true},
+{"matching issuer", "identra", "identra", false},
+{"mismatched issuer", "https://evil.com", "identra", true},
+{"empty issuer", "", "identra", true},
 }
 
 for _, tc := range testCases {
@@ -378,7 +378,7 @@ Subject:   "user-123",
 ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
 },
 Type: "access",
-UID:  "user-123",
+UserID: "user-123",
 }
 
 token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
