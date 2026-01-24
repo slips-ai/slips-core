@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+package mcptoken.v1;
+
+option go_package = "github.com/slips-ai/slips-core/gen/api/proto/mcptoken/v1;mcptokenv1";
+
+import "google/protobuf/timestamp.proto";
+
+// MCPToken represents an MCP authentication token
+message MCPToken {
+  string id = 1;
+  string token = 2; // The actual token UUID value
+  string name = 3;
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp expires_at = 5; // optional, null means never expires
+  google.protobuf.Timestamp last_used_at = 6; // optional
+  bool is_active = 7;
+}
+
+// CreateMCPTokenRequest is the request message for creating an MCP token
+message CreateMCPTokenRequest {
+  string name = 1;
+  google.protobuf.Timestamp expires_at = 2; // optional, null means never expires
+}
+
+// CreateMCPTokenResponse is the response message for creating an MCP token
+message CreateMCPTokenResponse {
+  MCPToken token = 1;
+}
+
+// GetMCPTokenRequest is the request message for getting an MCP token
+message GetMCPTokenRequest {
+  string id = 1;
+}
+
+// GetMCPTokenResponse is the response message for getting an MCP token
+message GetMCPTokenResponse {
+  MCPToken token = 1;
+}
+
+// ListMCPTokensRequest is the request message for listing MCP tokens
+message ListMCPTokensRequest {}
+
+// ListMCPTokensResponse is the response message for listing MCP tokens
+message ListMCPTokensResponse {
+  repeated MCPToken tokens = 1;
+}
+
+// RevokeMCPTokenRequest is the request message for revoking an MCP token
+message RevokeMCPTokenRequest {
+  string id = 1;
+}
+
+// RevokeMCPTokenResponse is the response message for revoking an MCP token
+message RevokeMCPTokenResponse {}
+
+// DeleteMCPTokenRequest is the request message for deleting an MCP token
+message DeleteMCPTokenRequest {
+  string id = 1;
+}
+
+// DeleteMCPTokenResponse is the response message for deleting an MCP token
+message DeleteMCPTokenResponse {}
+
+// MCPTokenService provides operations for managing MCP tokens
+service MCPTokenService {
+  rpc CreateMCPToken(CreateMCPTokenRequest) returns (CreateMCPTokenResponse) {}
+  rpc GetMCPToken(GetMCPTokenRequest) returns (GetMCPTokenResponse) {}
+  rpc ListMCPTokens(ListMCPTokensRequest) returns (ListMCPTokensResponse) {}
+  rpc RevokeMCPToken(RevokeMCPTokenRequest) returns (RevokeMCPTokenResponse) {}
+  rpc DeleteMCPToken(DeleteMCPTokenRequest) returns (DeleteMCPTokenResponse) {}
+}

@@ -8,6 +8,17 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type McpToken struct {
+	ID         pgtype.UUID      `json:"id"`
+	Token      pgtype.UUID      `json:"token"`
+	UserID     string           `json:"user_id"`
+	Name       string           `json:"name"`
+	CreatedAt  pgtype.Timestamp `json:"created_at"`
+	ExpiresAt  pgtype.Timestamp `json:"expires_at"`
+	LastUsedAt pgtype.Timestamp `json:"last_used_at"`
+	IsActive   bool             `json:"is_active"`
+}
+
 type Tag struct {
 	ID        pgtype.UUID        `json:"id"`
 	Name      string             `json:"name"`

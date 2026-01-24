@@ -12,8 +12,13 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	taskv1 "github.com/slips-ai/slips-core/gen/api/proto/task/v1"
+	mcptokenv1 "github.com/slips-ai/slips-core/gen/api/proto/mcptoken/v1"
 	tagv1 "github.com/slips-ai/slips-core/gen/api/proto/tag/v1"
+	taskv1 "github.com/slips-ai/slips-core/gen/api/proto/task/v1"
+
+	mcptokenapp "github.com/slips-ai/slips-core/internal/mcptoken/application"
+	mcptokengrpc "github.com/slips-ai/slips-core/internal/mcptoken/infra/grpc"
+	mcptokenpg "github.com/slips-ai/slips-core/internal/mcptoken/infra/postgres"
 
 	taskapp "github.com/slips-ai/slips-core/internal/task/application"
 	taskgrpc "github.com/slips-ai/slips-core/internal/task/infra/grpc"
@@ -83,7 +88,7 @@ func main() {
 
 	// Initialize JWT validator
 	jwtValidator := auth.NewJWTValidator(cfg.Auth.JWKSEndpoint, cfg.Auth.ExpectedIssuer)
-	
+
 	// Fetch JWKS keys
 	// NOTE: Keys are only fetched at startup. In production, implement periodic refresh
 	// or on-demand fetching when unknown 'kid' is encountered to handle key rotation.
@@ -94,35 +99,36 @@ func main() {
 	logr.Info("JWT validator initialized", "jwks_endpoint", cfg.Auth.JWKSEndpoint)
 
 	// Initialize repositories
+	mcptokenRepo := mcptokenpg.NewMCPTokenRepository(dbpool)
 	taskRepo := taskpg.NewTaskRepository(dbpool)
 	tagRepo := tagpg.NewTagRepository(dbpool)
 
 	// Initialize services
+	mcptokenService := mcptokenapp.NewService(mcptokenRepo, logr)
 	taskService := taskapp.NewService(taskRepo, logr)
 	tagService := tagapp.NewService(tagRepo, logr)
 
 	// Initialize gRPC servers
+	mcptokenServer := mcptokengrpc.NewMCPTokenServer(mcptokenService)
 	taskServer := taskgrpc.NewTaskServer(taskService)
 	tagServer := taggrpc.NewTagServer(tagService)
 
 	// Create gRPC server with interceptors
 	var opts []grpc.ServerOption
-	
-	// Build interceptor chain in order: auth first, then (optionally) tracing
-	// Auth runs first to reject unauthenticated requests before creating trace spans
 
 	// Build interceptor chain in order: auth first, then (optionally) tracing
 	// Auth runs first to reject unauthenticated requests before creating trace spans
 	interceptors := []grpc.UnaryServerInterceptor{
-		auth.UnaryServerInterceptor(jwtValidator),
+		auth.UnaryServerInterceptorWithMCP(jwtValidator, mcptokenService),
 	}
 	if cfg.Tracing.Enabled {
 		interceptors = append(interceptors, tracing.UnaryServerInterceptor())
 	}
-	opts = append(opts, grpc.UnaryInterceptor(chainUnaryInterceptors(interceptors...)))
+	opts = append(opts, grpc.ChainUnaryInterceptor(interceptors...))
 	grpcServer := grpc.NewServer(opts...)
 
 	// Register services
+	mcptokenv1.RegisterMCPTokenServiceServer(grpcServer, mcptokenServer)
 	taskv1.RegisterTaskServiceServer(grpcServer, taskServer)
 	tagv1.RegisterTagServiceServer(grpcServer, tagServer)
 
