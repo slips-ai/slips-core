@@ -19,5 +19,5 @@ tracing:
   endpoint: localhost:4317  # OTLP gRPC endpoint
 
 auth:
-  identra_grpc_endpoint: localhost:8080
+  identra_grpc_endpoint: 127.0.0.1:50051
   expected_issuer: identra

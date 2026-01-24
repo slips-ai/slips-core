@@ -23,9 +23,9 @@ func NewMCPTokenRepository(pool *pgxpool.Pool) *MCPTokenRepository {
 
 // Create creates a new MCP token
 func (r *MCPTokenRepository) Create(ctx context.Context, token *domain.MCPToken) error {
-	pgToken := pgtype.UUID{}
-	if err := pgToken.Scan(token.Token[:]); err != nil {
-		return err
+	pgToken := pgtype.UUID{
+		Bytes: token.Token,
+		Valid: true,
 	}
 
 	var pgExpiresAt pgtype.Timestamp
@@ -67,9 +67,9 @@ func (r *MCPTokenRepository) Create(ctx context.Context, token *domain.MCPToken)
 
 // GetByToken retrieves an MCP token by its token value
 func (r *MCPTokenRepository) GetByToken(ctx context.Context, token uuid.UUID) (*domain.MCPToken, error) {
-	pgToken := pgtype.UUID{}
-	if err := pgToken.Scan(token[:]); err != nil {
-		return nil, err
+	pgToken := pgtype.UUID{
+		Bytes: token,
+		Valid: true,
 	}
 
 	result, err := r.queries.GetMCPTokenByToken(ctx, pgToken)
@@ -82,9 +82,9 @@ func (r *MCPTokenRepository) GetByToken(ctx context.Context, token uuid.UUID) (*
 
 // GetByID retrieves an MCP token by its ID
 func (r *MCPTokenRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.MCPToken, error) {
-	pgID := pgtype.UUID{}
-	if err := pgID.Scan(id[:]); err != nil {
-		return nil, err
+	pgID := pgtype.UUID{
+		Bytes: id,
+		Valid: true,
 	}
 
 	result, err := r.queries.GetMCPTokenByID(ctx, pgID)
@@ -116,9 +116,9 @@ func (r *MCPTokenRepository) ListByUserID(ctx context.Context, userID string) ([
 
 // UpdateLastUsedAt updates the last used timestamp
 func (r *MCPTokenRepository) UpdateLastUsedAt(ctx context.Context, id uuid.UUID) error {
-	pgID := pgtype.UUID{}
-	if err := pgID.Scan(id[:]); err != nil {
-		return err
+	pgID := pgtype.UUID{
+		Bytes: id,
+		Valid: true,
 	}
 
 	return r.queries.UpdateMCPTokenLastUsedAt(ctx, pgID)
@@ -126,9 +126,9 @@ func (r *MCPTokenRepository) UpdateLastUsedAt(ctx context.Context, id uuid.UUID)
 
 // Revoke revokes (deactivates) an MCP token
 func (r *MCPTokenRepository) Revoke(ctx context.Context, id uuid.UUID) error {
-	pgID := pgtype.UUID{}
-	if err := pgID.Scan(id[:]); err != nil {
-		return err
+	pgID := pgtype.UUID{
+		Bytes: id,
+		Valid: true,
 	}
 
 	return r.queries.RevokeMCPToken(ctx, pgID)
@@ -136,9 +136,9 @@ func (r *MCPTokenRepository) Revoke(ctx context.Context, id uuid.UUID) error {
 
 // Delete permanently deletes an MCP token
 func (r *MCPTokenRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	pgID := pgtype.UUID{}
-	if err := pgID.Scan(id[:]); err != nil {
-		return err
+	pgID := pgtype.UUID{
+		Bytes: id,
+		Valid: true,
 	}
 
 	return r.queries.DeleteMCPToken(ctx, pgID)

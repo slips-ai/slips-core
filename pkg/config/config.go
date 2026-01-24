@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/viper"
 )
@@ -69,7 +70,9 @@ func Load(configPath string) (*Config, error) {
 	}
 
 	// Override with environment variables
+	// SLIPS_DATABASE_PASSWORD maps to database.password
 	v.SetEnvPrefix("SLIPS")
+	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	v.AutomaticEnv()
 
 	var cfg Config
