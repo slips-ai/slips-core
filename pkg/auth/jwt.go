@@ -4,12 +4,9 @@ import (
 	"context"
 	"crypto/rsa"
 	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"math/big"
-	"net/http"
 	"strings"
 	"sync"
 	"time"
@@ -26,22 +23,6 @@ var (
 	ErrInvalidIssuer = errors.New("invalid token issuer")
 )
 
-// JWKSKey represents a key in the JWKS
-type JWKSKey struct {
-	Kid string   `json:"kid"`
-	Kty string   `json:"kty"`
-	Alg string   `json:"alg"`
-	Use string   `json:"use"`
-	N   string   `json:"n"`
-	E   string   `json:"e"`
-	X5c []string `json:"x5c,omitempty"`
-}
-
-// JWKS represents the JSON Web Key Set
-type JWKS struct {
-	Keys []JWKSKey `json:"keys"`
-}
-
 // Claims represents Identra JWT claims
 // This matches Identra's StandardClaims structure with:
 // - typ: token type ("access" or "refresh")
@@ -54,65 +35,42 @@ type Claims struct {
 
 // JWTValidator validates Identra JWTs using JWKS
 type JWTValidator struct {
-	jwksURL       string
+	identraClient  *IdentraClient
 	expectedIssuer string
-	keys          map[string]*rsa.PublicKey
-	mu            sync.RWMutex
-	httpClient    *http.Client
+	keys           map[string]*rsa.PublicKey
+	mu             sync.RWMutex
 }
 
 // NewJWTValidator creates a new JWT validator
-func NewJWTValidator(jwksURL, expectedIssuer string) *JWTValidator {
+func NewJWTValidator(identraClient *IdentraClient, expectedIssuer string) *JWTValidator {
 	return &JWTValidator{
-		jwksURL:       jwksURL,
+		identraClient:  identraClient,
 		expectedIssuer: expectedIssuer,
-		keys:          make(map[string]*rsa.PublicKey),
-		httpClient: &http.Client{
-			Timeout: 10 * time.Second,
-		},
+		keys:           make(map[string]*rsa.PublicKey),
 	}
 }
 
-// FetchJWKS fetches the JWKS from the Identra endpoint
+// FetchJWKS fetches the JWKS from the Identra gRPC endpoint
 func (v *JWTValidator) FetchJWKS(ctx context.Context) error {
-	req, err := http.NewRequestWithContext(ctx, "GET", v.jwksURL, nil)
-	if err != nil {
-		return fmt.Errorf("failed to create request: %w", err)
-	}
-
-	resp, err := v.httpClient.Do(req)
+	resp, err := v.identraClient.GetJWKS(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to fetch JWKS: %w", err)
 	}
-	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("failed to fetch JWKS: status %d", resp.StatusCode)
-	}
-
-	// Limit response body size to prevent memory exhaustion
-	// 1MB should be more than sufficient for a JWKS response
-	limitedBody := io.LimitReader(resp.Body, 1024*1024)
-	body, err := io.ReadAll(limitedBody)
-	if err != nil {
-		return fmt.Errorf("failed to read response body: %w", err)
-	}
-
-	var jwks JWKS
-	if err := json.Unmarshal(body, &jwks); err != nil {
-		return fmt.Errorf("failed to unmarshal JWKS: %w", err)
+	if len(resp.Keys) == 0 {
+		return errors.New("empty JWKS response")
 	}
 
 	v.mu.Lock()
 	defer v.mu.Unlock()
 
 	// Parse and store the public keys
-	for _, key := range jwks.Keys {
+	for _, key := range resp.Keys {
 		if key.Kty != "RSA" {
 			continue
 		}
 
-		pubKey, err := parseRSAPublicKey(key.N, key.E)
+		pubKey, err := parseRSAPublicKey(*key.N, *key.E)
 		if err != nil {
 			return fmt.Errorf("failed to parse RSA public key: %w", err)
 		}
@@ -140,13 +98,13 @@ func parseRSAPublicKey(nStr, eStr string) (*rsa.PublicKey, error) {
 	// Convert to big.Int
 	n := new(big.Int).SetBytes(nBytes)
 	e := new(big.Int).SetBytes(eBytes)
-	
+
 	// Verify e fits in an int (typically RSA uses 65537)
 	if !e.IsInt64() {
 		return nil, fmt.Errorf("RSA exponent too large")
 	}
 	eInt64 := e.Int64()
-	
+
 	// Common RSA exponents are small (e.g., 65537), verify it's reasonable
 	const maxInt32 = int64(1<<31 - 1)
 	if eInt64 > maxInt32 || eInt64 <= 0 {

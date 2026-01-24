@@ -86,8 +86,17 @@ func main() {
 	}
 	logr.Info("Database connected", "host", cfg.Database.Host)
 
+	// Initialize Identra gRPC client
+	identraClient, err := auth.NewIdentraClient(cfg.Auth.IdentraGRPCEndpoint)
+	if err != nil {
+		logr.Error("Failed to initialize Identra client", "error", err)
+		os.Exit(1)
+	}
+	defer identraClient.Close()
+	logr.Info("Identra client initialized", "endpoint", cfg.Auth.IdentraGRPCEndpoint)
+
 	// Initialize JWT validator
-	jwtValidator := auth.NewJWTValidator(cfg.Auth.JWKSEndpoint, cfg.Auth.ExpectedIssuer)
+	jwtValidator := auth.NewJWTValidator(identraClient, cfg.Auth.ExpectedIssuer)
 
 	// Fetch JWKS keys
 	// NOTE: Keys are only fetched at startup. In production, implement periodic refresh
@@ -96,7 +105,7 @@ func main() {
 		logr.Error("Failed to fetch JWKS", "error", err)
 		os.Exit(1)
 	}
-	logr.Info("JWT validator initialized", "jwks_endpoint", cfg.Auth.JWKSEndpoint)
+	logr.Info("JWT validator initialized", "issuer", cfg.Auth.ExpectedIssuer)
 
 	// Initialize repositories
 	mcptokenRepo := mcptokenpg.NewMCPTokenRepository(dbpool)

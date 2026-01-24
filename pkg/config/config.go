@@ -38,8 +38,8 @@ type TracingConfig struct {
 
 // AuthConfig holds authentication configuration
 type AuthConfig struct {
-	JWKSEndpoint   string `mapstructure:"jwks_endpoint"`
-	ExpectedIssuer string `mapstructure:"expected_issuer"`
+	IdentraGRPCEndpoint string `mapstructure:"identra_grpc_endpoint"`
+	ExpectedIssuer      string `mapstructure:"expected_issuer"`
 }
 
 // Load loads configuration from file and environment
@@ -57,7 +57,7 @@ func Load(configPath string) (*Config, error) {
 	v.SetDefault("tracing.enabled", true)
 	v.SetDefault("tracing.service_name", "slips-core")
 	v.SetDefault("tracing.endpoint", "localhost:4317")
-	v.SetDefault("auth.jwks_endpoint", "http://localhost:8080/.well-known/jwks.json")
+	v.SetDefault("auth.identra_grpc_endpoint", "localhost:8080")
 	v.SetDefault("auth.expected_issuer", "identra")
 
 	// Read from config file if provided

@@ -14,10 +14,10 @@ database:
   sslmode: disable
 
 tracing:
-  enabled: true
+  enabled: false
   service_name: slips-core
   endpoint: localhost:4317  # OTLP gRPC endpoint
 
 auth:
-  jwks_endpoint: http://localhost:8080/.well-known/jwks.json
+  identra_grpc_endpoint: localhost:8080
   expected_issuer: identra
