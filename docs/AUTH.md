@@ -11,6 +11,7 @@ Tasks and Tags in slips-core are now user-scoped, meaning each user can only acc
 ### 1. Database Schema
 
 Both `tasks` and `tags` tables include an `owner_id` column:
+
 - Type: VARCHAR(255)
 - NOT NULL
 - Indexed for performance
@@ -20,6 +21,7 @@ Migration: `migrations/002_add_owner_id.up.sql`
 ### 2. JWT Validator (`pkg/auth/jwt.go`)
 
 The JWT validator implements Identra token validation:
+
 - Fetches JWKS (JSON Web Key Set) from Identra
 - Validates JWT tokens using RSA signatures (RS256)
 - Verifies token type is "access" (rejects "refresh" tokens)
@@ -27,6 +29,7 @@ The JWT validator implements Identra token validation:
 - Extracts user ID from `sub` claim (or `uid` for compatibility)
 
 **Token Format**: The implementation uses Identra's JWT token format with claims:
+
 - `typ`: Token type ("access" or "refresh")
 - `uid`: User ID (Identra UID, same as `sub`)
 - `sub`: Standard JWT subject claim (user ID)
@@ -37,6 +40,7 @@ The JWT validator implements Identra token validation:
 ### 3. gRPC Interceptor (`pkg/auth/interceptor.go`)
 
 The auth interceptor:
+
 - Runs on every gRPC request
 - Extracts JWT from `Authorization: Bearer <token>` header
 - Validates the token
@@ -45,6 +49,7 @@ The auth interceptor:
 ### 4. Context Helpers (`pkg/auth/context.go`)
 
 Helper functions for managing user ID in context:
+
 - `WithUserID(ctx, userID)` - Add user ID to context
 - `GetUserID(ctx)` - Extract user ID from context
 
@@ -59,12 +64,14 @@ auth:
 ```
 
 Environment variables (with `SLIPS_` prefix):
+
 - `SLIPS_AUTH_JWKS_ENDPOINT`
 - `SLIPS_AUTH_EXPECTED_ISSUER`
 
 ## Token Requirements
 
 Valid tokens must:
+
 1. Be signed with RSA using a key from the JWKS
 2. Have `typ` claim set to "access"
 3. Have `iss` claim matching `expected_issuer`
@@ -76,24 +83,29 @@ Valid tokens must:
 All operations are scoped to the authenticated user:
 
 ### Create Operations
+
 - Extract user ID from context
 - Set `owner_id` on new resource
 
 ### Read Operations (Get/List)
+
 - Filter by `owner_id = authenticated_user_id`
 - Returns 404/empty if resource doesn't exist or belongs to another user
 
 ### Update Operations
+
 - Fetch resource with `owner_id` check
 - Returns error if resource doesn't exist or belongs to another user
 
 ### Delete Operations
+
 - Delete only if `owner_id` matches authenticated user
 - Silent failure if resource doesn't exist or belongs to another user
 
 ## Error Handling
 
 ### Authentication Errors (codes.Unauthenticated)
+
 - Missing authorization header
 - Invalid token format
 - Expired token
@@ -102,6 +114,7 @@ All operations are scoped to the authenticated user:
 - Invalid issuer
 
 ### Authorization Errors (codes.NotFound/PermissionDenied)
+
 - Resource not found (may belong to another user)
 - Implicit: operations fail silently for other users' resources
 
@@ -115,10 +128,12 @@ All operations are scoped to the authenticated user:
 ## Testing
 
 ### Unit Tests
+
 - `pkg/auth/context_test.go` - Context helpers
 - `pkg/auth/jwt_test.go` - Token extraction and user ID extraction
 
 ### Integration Testing
+
 Use a valid JWT token from Identra:
 
 ```bash
@@ -143,6 +158,7 @@ make migrate-up
 ### Existing Data
 
 The migration sets `owner_id` to empty string by default. You may want to:
+
 1. Delete all existing data before migration
 2. Or manually assign ownership after migration
 
