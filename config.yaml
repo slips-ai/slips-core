@@ -21,3 +21,6 @@ tracing:
 auth:
   identra_grpc_endpoint: 127.0.0.1:50051
   expected_issuer: identra
+  oauth:
+    provider: github
+    redirect_url: http://localhost:9090/oauth/callback

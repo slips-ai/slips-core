@@ -1,4 +1,12 @@
 services:
+  identra-grpc:
+    image: ghcr.io/poly-workshop/identra-grpc:v0.1.3
+    ports:
+      - 50051:50051
+    environment:
+      - AUTH__GITHUB__CLIENT_ID=1234567890
+      - AUTH__GITHUB__CLIENT_SECRET=1234567890
+
   postgres:
     image: postgres:16-alpine
     container_name: slips-postgres

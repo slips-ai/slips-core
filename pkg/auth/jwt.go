@@ -206,3 +206,20 @@ func ExtractBearerToken(authHeader string) (string, error) {
 
 	return parts[1], nil
 }
+
+// ExtractUserIDFromToken parses a JWT token and extracts the user ID without full validation
+// This is used when we just need the user ID from a token that was already validated by Identra
+func ExtractUserIDFromToken(tokenString string) (string, error) {
+	// Parse token without verification (we trust Identra's token)
+	token, _, err := jwt.NewParser().ParseUnverified(tokenString, &Claims{})
+	if err != nil {
+		return "", fmt.Errorf("failed to parse token: %w", err)
+	}
+
+	claims, ok := token.Claims.(*Claims)
+	if !ok {
+		return "", errors.New("invalid token claims")
+	}
+
+	return ExtractUserID(claims)
+}

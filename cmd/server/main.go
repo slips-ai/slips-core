@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	authv1 "github.com/slips-ai/slips-core/gen/api/auth/v1"
 	mcptokenv1 "github.com/slips-ai/slips-core/gen/api/proto/mcptoken/v1"
 	tagv1 "github.com/slips-ai/slips-core/gen/api/proto/tag/v1"
 	taskv1 "github.com/slips-ai/slips-core/gen/api/proto/task/v1"
@@ -19,6 +20,10 @@ import (
 	mcptokenapp "github.com/slips-ai/slips-core/internal/mcptoken/application"
 	mcptokengrpc "github.com/slips-ai/slips-core/internal/mcptoken/infra/grpc"
 	mcptokenpg "github.com/slips-ai/slips-core/internal/mcptoken/infra/postgres"
+
+	authapp "github.com/slips-ai/slips-core/internal/auth/application"
+	authgrpc "github.com/slips-ai/slips-core/internal/auth/infra/grpc"
+	authpg "github.com/slips-ai/slips-core/internal/auth/infra/postgres"
 
 	taskapp "github.com/slips-ai/slips-core/internal/task/application"
 	taskgrpc "github.com/slips-ai/slips-core/internal/task/infra/grpc"
@@ -109,16 +114,25 @@ func main() {
 
 	// Initialize repositories
 	mcptokenRepo := mcptokenpg.NewMCPTokenRepository(dbpool)
+	authRepo := authpg.NewRepository(dbpool)
 	taskRepo := taskpg.NewTaskRepository(dbpool)
 	tagRepo := tagpg.NewTagRepository(dbpool)
 
 	// Initialize services
 	mcptokenService := mcptokenapp.NewService(mcptokenRepo, logr)
+	authService := authapp.NewService(
+		authRepo,
+		identraClient,
+		cfg.Auth.OAuth.Provider,
+		cfg.Auth.OAuth.RedirectURL,
+		logr,
+	)
 	taskService := taskapp.NewService(taskRepo, logr)
 	tagService := tagapp.NewService(tagRepo, logr)
 
 	// Initialize gRPC servers
 	mcptokenServer := mcptokengrpc.NewMCPTokenServer(mcptokenService)
+	authServer := authgrpc.NewServer(authService)
 	taskServer := taskgrpc.NewTaskServer(taskService)
 	tagServer := taggrpc.NewTagServer(tagService)
 
@@ -138,6 +152,7 @@ func main() {
 
 	// Register services
 	mcptokenv1.RegisterMCPTokenServiceServer(grpcServer, mcptokenServer)
+	authv1.RegisterAuthServiceServer(grpcServer, authServer)
 	taskv1.RegisterTaskServiceServer(grpcServer, taskServer)
 	tagv1.RegisterTagServiceServer(grpcServer, tagServer)
 

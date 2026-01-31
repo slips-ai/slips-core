@@ -35,3 +35,12 @@ type Task struct {
 	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
 	OwnerID   string             `json:"owner_id"`
 }
+
+type User struct {
+	ID        int32            `json:"id"`
+	UserID    string           `json:"user_id"`
+	Username  pgtype.Text      `json:"username"`
+	AvatarUrl pgtype.Text      `json:"avatar_url"`
+	CreatedAt pgtype.Timestamp `json:"created_at"`
+	UpdatedAt pgtype.Timestamp `json:"updated_at"`
+}

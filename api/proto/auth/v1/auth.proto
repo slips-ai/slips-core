@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+package auth.v1;
+
+option go_package = "github.com/slips-ai/slips-core/gen/api/auth/v1;authv1";
+
+// Token represents OAuth access and refresh tokens
+message Token {
+  string access_token = 1;
+  int64 access_token_expires_at = 2;
+  string refresh_token = 3;
+  int64 refresh_token_expires_at = 4;
+  string token_type = 5;
+}
+
+// UserInfo contains basic user profile information
+message UserInfo {
+  string user_id = 1;
+  string username = 2;
+  string avatar_url = 3;
+}
+
+// GetAuthorizationURLRequest is the request for initiating OAuth flow
+message GetAuthorizationURLRequest {
+  string provider = 1; // OAuth provider (e.g., "github")
+}
+
+// GetAuthorizationURLResponse contains the authorization URL
+message GetAuthorizationURLResponse {
+  string url = 1; // Authorization URL to redirect user to
+  string state = 2; // CSRF protection state token
+}
+
+// HandleCallbackRequest processes OAuth callback
+message HandleCallbackRequest {
+  string code = 1; // Authorization code from OAuth provider
+  string state = 2; // State token from GetAuthorizationURL
+}
+
+// HandleCallbackResponse returns tokens and user info
+message HandleCallbackResponse {
+  Token token = 1;
+  UserInfo user_info = 2;
+}
+
+// RefreshTokenRequest refreshes an access token
+message RefreshTokenRequest {
+  string refresh_token = 1;
+}
+
+// RefreshTokenResponse returns new tokens
+message RefreshTokenResponse {
+  Token token = 1;
+}
+
+// GetUserProfileRequest gets the current user's profile
+message GetUserProfileRequest {}
+
+// GetUserProfileResponse returns user profile information
+message GetUserProfileResponse {
+  UserInfo user_info = 1;
+}
+
+// AuthService provides authentication operations including OAuth
+service AuthService {
+  rpc GetAuthorizationURL(GetAuthorizationURLRequest) returns (GetAuthorizationURLResponse) {}
+  rpc HandleCallback(HandleCallbackRequest) returns (HandleCallbackResponse) {}
+  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse) {}
+  rpc GetUserProfile(GetUserProfileRequest) returns (GetUserProfileResponse) {}
+}

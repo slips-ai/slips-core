@@ -39,8 +39,15 @@ type TracingConfig struct {
 
 // AuthConfig holds authentication configuration
 type AuthConfig struct {
-	IdentraGRPCEndpoint string `mapstructure:"identra_grpc_endpoint"`
-	ExpectedIssuer      string `mapstructure:"expected_issuer"`
+	IdentraGRPCEndpoint string      `mapstructure:"identra_grpc_endpoint"`
+	ExpectedIssuer      string      `mapstructure:"expected_issuer"`
+	OAuth               OAuthConfig `mapstructure:"oauth"`
+}
+
+// OAuthConfig holds OAuth-specific configuration
+type OAuthConfig struct {
+	Provider    string `mapstructure:"provider"`
+	RedirectURL string `mapstructure:"redirect_url"`
 }
 
 // Load loads configuration from file and environment
