@@ -1,17 +1,17 @@
 services:
   identra-grpc:
-    image: ghcr.io/poly-workshop/identra-grpc:v0.1.5
+    image: ghcr.io/poly-workshop/identra-grpc:v0.1.6
     container_name: identra-grpc
     ports:
       - 50051:50051
     environment:
-      PRESISTENCE_TYPE: gorm
-      PRESISTENCE_GORM_DRIVER: postgres
-      PRESISTENCE_GORM_HOST: localhost
-      PRESISTENCE_GORM_PORT: 5432
-      PRESISTENCE_GORM_USER: postgres
-      PRESISTENCE_GORM_PASSWORD: postgres
-      PRESISTENCE_GORM_DBNAME: identra
+      PERSISTENCE_TYPE: gorm
+      PERSISTENCE_GORM_DRIVER: postgres
+      PERSISTENCE_GORM_HOST: host.docker.internal
+      PERSISTENCE_GORM_PORT: 5432
+      PERSISTENCE_GORM_USERNAME: postgres
+      PERSISTENCE_GORM_PASSWORD: postgres
+      PERSISTENCE_GORM_DBNAME: identra
 
   postgres:
     image: postgres:18
