@@ -44,9 +44,9 @@ func (r *TaskRepository) Create(ctx context.Context, task *domain.Task) error {
 
 // Get retrieves a task by ID
 func (r *TaskRepository) Get(ctx context.Context, id uuid.UUID, ownerID string) (*domain.Task, error) {
-	pgID := pgtype.UUID{}
-	if err := pgID.Scan(id[:]); err != nil {
-		return nil, err
+	pgID := pgtype.UUID{
+		Bytes: id,
+		Valid: true,
 	}
 
 	result, err := r.queries.GetTask(ctx, GetTaskParams{
@@ -74,9 +74,9 @@ func (r *TaskRepository) Get(ctx context.Context, id uuid.UUID, ownerID string) 
 
 // Update updates a task
 func (r *TaskRepository) Update(ctx context.Context, task *domain.Task) error {
-	pgID := pgtype.UUID{}
-	if err := pgID.Scan(task.ID[:]); err != nil {
-		return err
+	pgID := pgtype.UUID{
+		Bytes: task.ID,
+		Valid: true,
 	}
 
 	result, err := r.queries.UpdateTask(ctx, UpdateTaskParams{
@@ -95,9 +95,9 @@ func (r *TaskRepository) Update(ctx context.Context, task *domain.Task) error {
 
 // Delete deletes a task
 func (r *TaskRepository) Delete(ctx context.Context, id uuid.UUID, ownerID string) error {
-	pgID := pgtype.UUID{}
-	if err := pgID.Scan(id[:]); err != nil {
-		return err
+	pgID := pgtype.UUID{
+		Bytes: id,
+		Valid: true,
 	}
 	return r.queries.DeleteTask(ctx, DeleteTaskParams{
 		ID:      pgID,

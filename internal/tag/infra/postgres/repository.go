@@ -43,9 +43,9 @@ func (r *TagRepository) Create(ctx context.Context, tag *domain.Tag) error {
 
 // Get retrieves a tag by ID
 func (r *TagRepository) Get(ctx context.Context, id uuid.UUID, ownerID string) (*domain.Tag, error) {
-	pgID := pgtype.UUID{}
-	if err := pgID.Scan(id[:]); err != nil {
-		return nil, err
+	pgID := pgtype.UUID{
+		Bytes: id,
+		Valid: true,
 	}
 
 	result, err := r.queries.GetTag(ctx, GetTagParams{
@@ -72,9 +72,9 @@ func (r *TagRepository) Get(ctx context.Context, id uuid.UUID, ownerID string) (
 
 // Update updates a tag
 func (r *TagRepository) Update(ctx context.Context, tag *domain.Tag) error {
-	pgID := pgtype.UUID{}
-	if err := pgID.Scan(tag.ID[:]); err != nil {
-		return err
+	pgID := pgtype.UUID{
+		Bytes: tag.ID,
+		Valid: true,
 	}
 
 	result, err := r.queries.UpdateTag(ctx, UpdateTagParams{
@@ -92,9 +92,9 @@ func (r *TagRepository) Update(ctx context.Context, tag *domain.Tag) error {
 
 // Delete deletes a tag
 func (r *TagRepository) Delete(ctx context.Context, id uuid.UUID, ownerID string) error {
-	pgID := pgtype.UUID{}
-	if err := pgID.Scan(id[:]); err != nil {
-		return err
+	pgID := pgtype.UUID{
+		Bytes: id,
+		Valid: true,
 	}
 	return r.queries.DeleteTag(ctx, DeleteTagParams{
 		ID:      pgID,
