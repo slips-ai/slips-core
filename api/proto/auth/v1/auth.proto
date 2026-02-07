@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package auth.v1;
 
-option go_package = "github.com/slips-ai/slips-core/gen/api/auth/v1;authv1";
+option go_package = "github.com/slips-ai/slips-core/gen/go/auth/v1;authv1";
 
 // Token represents OAuth access and refresh tokens
 message Token {
