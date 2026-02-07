@@ -2,9 +2,9 @@ syntax = "proto3";
 
 package task.v1;
 
-option go_package = "github.com/slips-ai/slips-core/gen/api/proto/task/v1;taskv1";
-
 import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/slips-ai/slips-core/gen/go/task/v1;taskv1";
 
 // Task represents a task entity
 message Task {
@@ -13,12 +13,14 @@ message Task {
   string notes = 3;
   google.protobuf.Timestamp created_at = 4;
   google.protobuf.Timestamp updated_at = 5;
+  repeated string tag_ids = 6;
 }
 
 // CreateTaskRequest is the request message for creating a task
 message CreateTaskRequest {
   string title = 1;
   string notes = 2;
+  repeated string tag_names = 3;
 }
 
 // CreateTaskResponse is the response message for creating a task
@@ -41,6 +43,7 @@ message UpdateTaskRequest {
   string id = 1;
   string title = 2;
   string notes = 3;
+  repeated string tag_names = 4;
 }
 
 // UpdateTaskResponse is the response message for updating a task
@@ -60,6 +63,7 @@ message DeleteTaskResponse {}
 message ListTasksRequest {
   int32 page_size = 1;
   string page_token = 2;
+  repeated string filter_tag_ids = 3;
 }
 
 // ListTasksResponse is the response message for listing tasks

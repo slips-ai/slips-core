@@ -43,6 +43,20 @@ func (q *Queries) CreateTag(ctx context.Context, arg CreateTagParams) (CreateTag
 	return i, err
 }
 
+const deleteOrphanTags = `-- name: DeleteOrphanTags :exec
+DELETE FROM tags
+WHERE owner_id = $1
+  AND id NOT IN (
+    SELECT DISTINCT tag_id
+    FROM task_tags
+  )
+`
+
+func (q *Queries) DeleteOrphanTags(ctx context.Context, ownerID string) error {
+	_, err := q.db.Exec(ctx, deleteOrphanTags, ownerID)
+	return err
+}
+
 const deleteTag = `-- name: DeleteTag :exec
 DELETE FROM tags
 WHERE id = $1 AND owner_id = $2
@@ -80,6 +94,38 @@ type GetTagRow struct {
 func (q *Queries) GetTag(ctx context.Context, arg GetTagParams) (GetTagRow, error) {
 	row := q.db.QueryRow(ctx, getTag, arg.ID, arg.OwnerID)
 	var i GetTagRow
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.OwnerID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getTagByName = `-- name: GetTagByName :one
+SELECT id, name, owner_id, created_at, updated_at
+FROM tags
+WHERE name = $1 AND owner_id = $2
+`
+
+type GetTagByNameParams struct {
+	Name    string `json:"name"`
+	OwnerID string `json:"owner_id"`
+}
+
+type GetTagByNameRow struct {
+	ID        pgtype.UUID        `json:"id"`
+	Name      string             `json:"name"`
+	OwnerID   string             `json:"owner_id"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) GetTagByName(ctx context.Context, arg GetTagByNameParams) (GetTagByNameRow, error) {
+	row := q.db.QueryRow(ctx, getTagByName, arg.Name, arg.OwnerID)
+	var i GetTagByNameRow
 	err := row.Scan(
 		&i.ID,
 		&i.Name,

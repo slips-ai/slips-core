@@ -12,10 +12,10 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	authv1 "github.com/slips-ai/slips-core/gen/api/auth/v1"
-	mcptokenv1 "github.com/slips-ai/slips-core/gen/api/proto/mcptoken/v1"
-	tagv1 "github.com/slips-ai/slips-core/gen/api/proto/tag/v1"
-	taskv1 "github.com/slips-ai/slips-core/gen/api/proto/task/v1"
+	authv1 "github.com/slips-ai/slips-core/gen/go/auth/v1"
+	mcptokenv1 "github.com/slips-ai/slips-core/gen/go/mcptoken/v1"
+	tagv1 "github.com/slips-ai/slips-core/gen/go/tag/v1"
+	taskv1 "github.com/slips-ai/slips-core/gen/go/task/v1"
 
 	mcptokenapp "github.com/slips-ai/slips-core/internal/mcptoken/application"
 	mcptokengrpc "github.com/slips-ai/slips-core/internal/mcptoken/infra/grpc"
@@ -127,7 +127,7 @@ func main() {
 		cfg.Auth.OAuth.RedirectURL,
 		logr,
 	)
-	taskService := taskapp.NewService(taskRepo, logr)
+	taskService := taskapp.NewService(taskRepo, tagRepo, logr)
 	tagService := tagapp.NewService(tagRepo, logr)
 
 	// Initialize gRPC servers

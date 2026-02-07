@@ -10,8 +10,10 @@ import (
 
 type Querier interface {
 	CreateTag(ctx context.Context, arg CreateTagParams) (CreateTagRow, error)
+	DeleteOrphanTags(ctx context.Context, ownerID string) error
 	DeleteTag(ctx context.Context, arg DeleteTagParams) error
 	GetTag(ctx context.Context, arg GetTagParams) (GetTagRow, error)
+	GetTagByName(ctx context.Context, arg GetTagByNameParams) (GetTagByNameRow, error)
 	ListTags(ctx context.Context, arg ListTagsParams) ([]ListTagsRow, error)
 	UpdateTag(ctx context.Context, arg UpdateTagParams) (UpdateTagRow, error)
 }

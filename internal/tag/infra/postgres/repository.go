@@ -70,6 +70,51 @@ func (r *TagRepository) Get(ctx context.Context, id uuid.UUID, ownerID string) (
 	}, nil
 }
 
+// GetByName retrieves a tag by name
+func (r *TagRepository) GetByName(ctx context.Context, name, ownerID string) (*domain.Tag, error) {
+	result, err := r.queries.GetTagByName(ctx, GetTagByNameParams{
+		Name:    name,
+		OwnerID: ownerID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	tagID, err := uuid.FromBytes(result.ID.Bytes[:])
+	if err != nil {
+		return nil, err
+	}
+
+	return &domain.Tag{
+		ID:        tagID,
+		Name:      result.Name,
+		OwnerID:   result.OwnerID,
+		CreatedAt: result.CreatedAt.Time,
+		UpdatedAt: result.UpdatedAt.Time,
+	}, nil
+}
+
+// GetOrCreate retrieves a tag by name or creates it if it doesn't exist
+func (r *TagRepository) GetOrCreate(ctx context.Context, name, ownerID string) (*domain.Tag, error) {
+	// Try to get existing tag
+	tag, err := r.GetByName(ctx, name, ownerID)
+	if err == nil {
+		return tag, nil
+	}
+
+	// If tag doesn't exist, create it
+	newTag := &domain.Tag{
+		Name:    name,
+		OwnerID: ownerID,
+	}
+	err = r.Create(ctx, newTag)
+	if err != nil {
+		return nil, err
+	}
+
+	return newTag, nil
+}
+
 // Update updates a tag
 func (r *TagRepository) Update(ctx context.Context, tag *domain.Tag) error {
 	pgID := pgtype.UUID{
@@ -100,6 +145,11 @@ func (r *TagRepository) Delete(ctx context.Context, id uuid.UUID, ownerID string
 		ID:      pgID,
 		OwnerID: ownerID,
 	})
+}
+
+// DeleteOrphans deletes tags that are not associated with any tasks
+func (r *TagRepository) DeleteOrphans(ctx context.Context, ownerID string) error {
+	return r.queries.DeleteOrphanTags(ctx, ownerID)
 }
 
 // List lists tags with pagination

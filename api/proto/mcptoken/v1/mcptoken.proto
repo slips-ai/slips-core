@@ -2,9 +2,9 @@ syntax = "proto3";
 
 package mcptoken.v1;
 
-option go_package = "github.com/slips-ai/slips-core/gen/api/proto/mcptoken/v1;mcptokenv1";
-
 import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/slips-ai/slips-core/gen/go/mcptoken/v1;mcptokenv1";
 
 // MCPToken represents an MCP authentication token
 message MCPToken {

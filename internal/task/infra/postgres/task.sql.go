@@ -46,6 +46,22 @@ func (q *Queries) CreateTask(ctx context.Context, arg CreateTaskParams) (CreateT
 	return i, err
 }
 
+const createTaskTag = `-- name: CreateTaskTag :exec
+INSERT INTO task_tags (task_id, tag_id)
+VALUES ($1, $2)
+ON CONFLICT DO NOTHING
+`
+
+type CreateTaskTagParams struct {
+	TaskID pgtype.UUID `json:"task_id"`
+	TagID  pgtype.UUID `json:"tag_id"`
+}
+
+func (q *Queries) CreateTaskTag(ctx context.Context, arg CreateTaskTagParams) error {
+	_, err := q.db.Exec(ctx, createTaskTag, arg.TaskID, arg.TagID)
+	return err
+}
+
 const deleteTask = `-- name: DeleteTask :exec
 DELETE FROM tasks
 WHERE id = $1 AND owner_id = $2
@@ -58,6 +74,16 @@ type DeleteTaskParams struct {
 
 func (q *Queries) DeleteTask(ctx context.Context, arg DeleteTaskParams) error {
 	_, err := q.db.Exec(ctx, deleteTask, arg.ID, arg.OwnerID)
+	return err
+}
+
+const deleteTaskTags = `-- name: DeleteTaskTags :exec
+DELETE FROM task_tags
+WHERE task_id = $1
+`
+
+func (q *Queries) DeleteTaskTags(ctx context.Context, taskID pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteTaskTags, taskID)
 	return err
 }
 
@@ -95,18 +121,48 @@ func (q *Queries) GetTask(ctx context.Context, arg GetTaskParams) (GetTaskRow, e
 	return i, err
 }
 
+const getTaskTagIDs = `-- name: GetTaskTagIDs :many
+SELECT tag_id
+FROM task_tags
+WHERE task_id = $1
+`
+
+func (q *Queries) GetTaskTagIDs(ctx context.Context, taskID pgtype.UUID) ([]pgtype.UUID, error) {
+	rows, err := q.db.Query(ctx, getTaskTagIDs, taskID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []pgtype.UUID{}
+	for rows.Next() {
+		var tag_id pgtype.UUID
+		if err := rows.Scan(&tag_id); err != nil {
+			return nil, err
+		}
+		items = append(items, tag_id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listTasks = `-- name: ListTasks :many
-SELECT id, title, notes, owner_id, created_at, updated_at
-FROM tasks
-WHERE owner_id = $1
-ORDER BY created_at DESC
+SELECT DISTINCT t.id, t.title, t.notes, t.owner_id, t.created_at, t.updated_at
+FROM tasks t
+LEFT JOIN task_tags tt ON t.id = tt.task_id
+WHERE t.owner_id = $1
+  AND ($4::uuid[] IS NULL
+       OR tt.tag_id = ANY($4::uuid[]))
+ORDER BY t.created_at DESC
 LIMIT $2 OFFSET $3
 `
 
 type ListTasksParams struct {
-	OwnerID string `json:"owner_id"`
-	Limit   int32  `json:"limit"`
-	Offset  int32  `json:"offset"`
+	OwnerID      string        `json:"owner_id"`
+	Limit        int32         `json:"limit"`
+	Offset       int32         `json:"offset"`
+	FilterTagIds []pgtype.UUID `json:"filter_tag_ids"`
 }
 
 type ListTasksRow struct {
@@ -119,7 +175,12 @@ type ListTasksRow struct {
 }
 
 func (q *Queries) ListTasks(ctx context.Context, arg ListTasksParams) ([]ListTasksRow, error) {
-	rows, err := q.db.Query(ctx, listTasks, arg.OwnerID, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listTasks,
+		arg.OwnerID,
+		arg.Limit,
+		arg.Offset,
+		arg.FilterTagIds,
+	)
 	if err != nil {
 		return nil, err
 	}

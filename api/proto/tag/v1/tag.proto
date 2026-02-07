@@ -2,9 +2,9 @@ syntax = "proto3";
 
 package tag.v1;
 
-option go_package = "github.com/slips-ai/slips-core/gen/api/proto/tag/v1;tagv1";
-
 import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/slips-ai/slips-core/gen/go/tag/v1;tagv1";
 
 // Tag represents a tag entity
 message Tag {

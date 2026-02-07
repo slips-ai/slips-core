@@ -598,9 +598,9 @@ const file_tag_v1_tag_proto_rawDesc = "" +
 	"\x06GetTag\x12\x15.tag.v1.GetTagRequest\x1a\x16.tag.v1.GetTagResponse\x12@\n" +
 	"\tUpdateTag\x12\x18.tag.v1.UpdateTagRequest\x1a\x19.tag.v1.UpdateTagResponse\x12@\n" +
 	"\tDeleteTag\x12\x18.tag.v1.DeleteTagRequest\x1a\x19.tag.v1.DeleteTagResponse\x12=\n" +
-	"\bListTags\x12\x17.tag.v1.ListTagsRequest\x1a\x18.tag.v1.ListTagsResponseB\x84\x01\n" +
+	"\bListTags\x12\x17.tag.v1.ListTagsRequest\x1a\x18.tag.v1.ListTagsResponseB\x83\x01\n" +
 	"\n" +
-	"com.tag.v1B\bTagProtoP\x01Z3github.com/slips-ai/slips-core/gen/api/tag/v1;tagv1\xa2\x02\x03TXX\xaa\x02\x06Tag.V1\xca\x02\x06Tag\\V1\xe2\x02\x12Tag\\V1\\GPBMetadata\xea\x02\aTag::V1b\x06proto3"
+	"com.tag.v1B\bTagProtoP\x01Z2github.com/slips-ai/slips-core/gen/go/tag/v1;tagv1\xa2\x02\x03TXX\xaa\x02\x06Tag.V1\xca\x02\x06Tag\\V1\xe2\x02\x12Tag\\V1\\GPBMetadata\xea\x02\aTag::V1b\x06proto3"
 
 var (
 	file_tag_v1_tag_proto_rawDescOnce sync.Once

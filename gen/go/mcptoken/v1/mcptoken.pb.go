@@ -589,8 +589,8 @@ const file_mcptoken_v1_mcptoken_proto_rawDesc = "" +
 	"\vGetMCPToken\x12\x1f.mcptoken.v1.GetMCPTokenRequest\x1a .mcptoken.v1.GetMCPTokenResponse\"\x00\x12X\n" +
 	"\rListMCPTokens\x12!.mcptoken.v1.ListMCPTokensRequest\x1a\".mcptoken.v1.ListMCPTokensResponse\"\x00\x12[\n" +
 	"\x0eRevokeMCPToken\x12\".mcptoken.v1.RevokeMCPTokenRequest\x1a#.mcptoken.v1.RevokeMCPTokenResponse\"\x00\x12[\n" +
-	"\x0eDeleteMCPToken\x12\".mcptoken.v1.DeleteMCPTokenRequest\x1a#.mcptoken.v1.DeleteMCPTokenResponse\"\x00B\xac\x01\n" +
-	"\x0fcom.mcptoken.v1B\rMcptokenProtoP\x01Z=github.com/slips-ai/slips-core/gen/api/mcptoken/v1;mcptokenv1\xa2\x02\x03MXX\xaa\x02\vMcptoken.V1\xca\x02\vMcptoken\\V1\xe2\x02\x17Mcptoken\\V1\\GPBMetadata\xea\x02\fMcptoken::V1b\x06proto3"
+	"\x0eDeleteMCPToken\x12\".mcptoken.v1.DeleteMCPTokenRequest\x1a#.mcptoken.v1.DeleteMCPTokenResponse\"\x00B\xab\x01\n" +
+	"\x0fcom.mcptoken.v1B\rMcptokenProtoP\x01Z<github.com/slips-ai/slips-core/gen/go/mcptoken/v1;mcptokenv1\xa2\x02\x03MXX\xaa\x02\vMcptoken.V1\xca\x02\vMcptoken\\V1\xe2\x02\x17Mcptoken\\V1\\GPBMetadata\xea\x02\fMcptoken::V1b\x06proto3"
 
 var (
 	file_mcptoken_v1_mcptoken_proto_rawDescOnce sync.Once

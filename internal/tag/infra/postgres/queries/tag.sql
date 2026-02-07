@@ -8,6 +8,11 @@ SELECT id, name, owner_id, created_at, updated_at
 FROM tags
 WHERE id = $1 AND owner_id = $2;
 
+-- name: GetTagByName :one
+SELECT id, name, owner_id, created_at, updated_at
+FROM tags
+WHERE name = $1 AND owner_id = $2;
+
 -- name: UpdateTag :one
 UPDATE tags
 SET name = $2, updated_at = NOW()
@@ -18,9 +23,18 @@ RETURNING id, name, owner_id, created_at, updated_at;
 DELETE FROM tags
 WHERE id = $1 AND owner_id = $2;
 
+-- name: DeleteOrphanTags :exec
+DELETE FROM tags
+WHERE owner_id = $1
+  AND id NOT IN (
+    SELECT DISTINCT tag_id
+    FROM task_tags
+  );
+
 -- name: ListTags :many
 SELECT id, name, owner_id, created_at, updated_at
 FROM tags
 WHERE owner_id = $1
 ORDER BY name ASC
 LIMIT $2 OFFSET $3;
+

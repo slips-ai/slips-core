@@ -6,12 +6,17 @@ package postgres
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Querier interface {
 	CreateTask(ctx context.Context, arg CreateTaskParams) (CreateTaskRow, error)
+	CreateTaskTag(ctx context.Context, arg CreateTaskTagParams) error
 	DeleteTask(ctx context.Context, arg DeleteTaskParams) error
+	DeleteTaskTags(ctx context.Context, taskID pgtype.UUID) error
 	GetTask(ctx context.Context, arg GetTaskParams) (GetTaskRow, error)
+	GetTaskTagIDs(ctx context.Context, taskID pgtype.UUID) ([]pgtype.UUID, error)
 	ListTasks(ctx context.Context, arg ListTasksParams) ([]ListTasksRow, error)
 	UpdateTask(ctx context.Context, arg UpdateTaskParams) (UpdateTaskRow, error)
 }

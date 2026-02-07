@@ -574,8 +574,8 @@ const file_auth_v1_auth_proto_rawDesc = "" +
 	"\x13GetAuthorizationURL\x12#.auth.v1.GetAuthorizationURLRequest\x1a$.auth.v1.GetAuthorizationURLResponse\"\x00\x12S\n" +
 	"\x0eHandleCallback\x12\x1e.auth.v1.HandleCallbackRequest\x1a\x1f.auth.v1.HandleCallbackResponse\"\x00\x12M\n" +
 	"\fRefreshToken\x12\x1c.auth.v1.RefreshTokenRequest\x1a\x1d.auth.v1.RefreshTokenResponse\"\x00\x12S\n" +
-	"\x0eGetUserProfile\x12\x1e.auth.v1.GetUserProfileRequest\x1a\x1f.auth.v1.GetUserProfileResponse\"\x00B\x8c\x01\n" +
-	"\vcom.auth.v1B\tAuthProtoP\x01Z5github.com/slips-ai/slips-core/gen/api/auth/v1;authv1\xa2\x02\x03AXX\xaa\x02\aAuth.V1\xca\x02\aAuth\\V1\xe2\x02\x13Auth\\V1\\GPBMetadata\xea\x02\bAuth::V1b\x06proto3"
+	"\x0eGetUserProfile\x12\x1e.auth.v1.GetUserProfileRequest\x1a\x1f.auth.v1.GetUserProfileResponse\"\x00B\x8b\x01\n" +
+	"\vcom.auth.v1B\tAuthProtoP\x01Z4github.com/slips-ai/slips-core/gen/go/auth/v1;authv1\xa2\x02\x03AXX\xaa\x02\aAuth.V1\xca\x02\aAuth\\V1\xe2\x02\x13Auth\\V1\\GPBMetadata\xea\x02\bAuth::V1b\x06proto3"
 
 var (
 	file_auth_v1_auth_proto_rawDescOnce sync.Once

@@ -36,6 +36,12 @@ type Task struct {
 	OwnerID   string             `json:"owner_id"`
 }
 
+type TaskTag struct {
+	TaskID    pgtype.UUID        `json:"task_id"`
+	TagID     pgtype.UUID        `json:"tag_id"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
 type User struct {
 	ID        int32            `json:"id"`
 	UserID    string           `json:"user_id"`

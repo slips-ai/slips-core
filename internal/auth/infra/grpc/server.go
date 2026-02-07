@@ -3,7 +3,7 @@ package grpc
 import (
 	"context"
 
-	authv1 "github.com/slips-ai/slips-core/gen/api/auth/v1"
+	authv1 "github.com/slips-ai/slips-core/gen/go/auth/v1"
 	"github.com/slips-ai/slips-core/internal/auth/application"
 	"github.com/slips-ai/slips-core/pkg/auth"
 	"github.com/slips-ai/slips-core/pkg/grpcerrors"

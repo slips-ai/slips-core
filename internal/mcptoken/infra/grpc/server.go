@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	mcptokenv1 "github.com/slips-ai/slips-core/gen/api/proto/mcptoken/v1"
+	mcptokenv1 "github.com/slips-ai/slips-core/gen/go/mcptoken/v1"
 	"github.com/slips-ai/slips-core/internal/mcptoken/application"
 	"github.com/slips-ai/slips-core/internal/mcptoken/domain"
 	"github.com/slips-ai/slips-core/pkg/grpcerrors"

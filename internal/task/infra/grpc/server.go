@@ -4,8 +4,9 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	taskv1 "github.com/slips-ai/slips-core/gen/api/proto/task/v1"
+	taskv1 "github.com/slips-ai/slips-core/gen/go/task/v1"
 	"github.com/slips-ai/slips-core/internal/task/application"
+	"github.com/slips-ai/slips-core/internal/task/domain"
 	"github.com/slips-ai/slips-core/pkg/grpcerrors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -38,19 +39,13 @@ func (s *TaskServer) CreateTask(ctx context.Context, req *taskv1.CreateTaskReque
 		return nil, err
 	}
 
-	task, err := s.service.CreateTask(ctx, req.Title, req.Notes)
+	task, err := s.service.CreateTask(ctx, req.Title, req.Notes, req.TagNames)
 	if err != nil {
 		return nil, grpcerrors.ToGRPCError(err, "failed to create task")
 	}
 
 	return &taskv1.CreateTaskResponse{
-		Task: &taskv1.Task{
-			Id:        task.ID.String(),
-			Title:     task.Title,
-			Notes:     task.Notes,
-			CreatedAt: timestamppb.New(task.CreatedAt),
-			UpdatedAt: timestamppb.New(task.UpdatedAt),
-		},
+		Task: taskToProto(task),
 	}, nil
 }
 
@@ -67,13 +62,7 @@ func (s *TaskServer) GetTask(ctx context.Context, req *taskv1.GetTaskRequest) (*
 	}
 
 	return &taskv1.GetTaskResponse{
-		Task: &taskv1.Task{
-			Id:        task.ID.String(),
-			Title:     task.Title,
-			Notes:     task.Notes,
-			CreatedAt: timestamppb.New(task.CreatedAt),
-			UpdatedAt: timestamppb.New(task.UpdatedAt),
-		},
+		Task: taskToProto(task),
 	}, nil
 }
 
@@ -95,19 +84,13 @@ func (s *TaskServer) UpdateTask(ctx context.Context, req *taskv1.UpdateTaskReque
 		return nil, err
 	}
 
-	task, err := s.service.UpdateTask(ctx, id, req.Title, req.Notes)
+	task, err := s.service.UpdateTask(ctx, id, req.Title, req.Notes, req.TagNames)
 	if err != nil {
 		return nil, grpcerrors.ToGRPCError(err, "failed to update task")
 	}
 
 	return &taskv1.UpdateTaskResponse{
-		Task: &taskv1.Task{
-			Id:        task.ID.String(),
-			Title:     task.Title,
-			Notes:     task.Notes,
-			CreatedAt: timestamppb.New(task.CreatedAt),
-			UpdatedAt: timestamppb.New(task.UpdatedAt),
-		},
+		Task: taskToProto(task),
 	}, nil
 }
 
@@ -148,20 +131,24 @@ func (s *TaskServer) ListTasks(ctx context.Context, req *taskv1.ListTasksRequest
 		return nil, err
 	}
 
-	tasks, err := s.service.ListTasks(ctx, pageSize, offset)
+	// Parse filter tag IDs
+	filterTagIDs := make([]uuid.UUID, 0, len(req.FilterTagIds))
+	for _, tagIDStr := range req.FilterTagIds {
+		tagID, err := uuid.Parse(tagIDStr)
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid tag ID format: %s", tagIDStr)
+		}
+		filterTagIDs = append(filterTagIDs, tagID)
+	}
+
+	tasks, err := s.service.ListTasks(ctx, filterTagIDs, pageSize, offset)
 	if err != nil {
 		return nil, grpcerrors.ToGRPCError(err, "failed to list tasks")
 	}
 
 	protoTasks := make([]*taskv1.Task, len(tasks))
 	for i, task := range tasks {
-		protoTasks[i] = &taskv1.Task{
-			Id:        task.ID.String(),
-			Title:     task.Title,
-			Notes:     task.Notes,
-			CreatedAt: timestamppb.New(task.CreatedAt),
-			UpdatedAt: timestamppb.New(task.UpdatedAt),
-		}
+		protoTasks[i] = taskToProto(task)
 	}
 
 	// Note: next_page_token is not implemented yet
@@ -169,4 +156,21 @@ func (s *TaskServer) ListTasks(ctx context.Context, req *taskv1.ListTasksRequest
 	return &taskv1.ListTasksResponse{
 		Tasks: protoTasks,
 	}, nil
+}
+
+// taskToProto converts a domain Task to a proto Task
+func taskToProto(task *domain.Task) *taskv1.Task {
+	tagIDs := make([]string, len(task.TagIDs))
+	for i, tagID := range task.TagIDs {
+		tagIDs[i] = tagID.String()
+	}
+
+	return &taskv1.Task{
+		Id:        task.ID.String(),
+		Title:     task.Title,
+		Notes:     task.Notes,
+		CreatedAt: timestamppb.New(task.CreatedAt),
+		UpdatedAt: timestamppb.New(task.UpdatedAt),
+		TagIds:    tagIDs,
+	}
 }

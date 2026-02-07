@@ -5,6 +5,7 @@ import (
 	"log/slog"
 
 	"github.com/google/uuid"
+	tagdomain "github.com/slips-ai/slips-core/internal/tag/domain"
 	"github.com/slips-ai/slips-core/internal/task/domain"
 	"github.com/slips-ai/slips-core/pkg/auth"
 	"go.opentelemetry.io/otel"
@@ -16,20 +17,22 @@ var tracer = otel.Tracer("task-service")
 
 // Service provides task business logic
 type Service struct {
-	repo   domain.Repository
-	logger *slog.Logger
+	repo    domain.Repository
+	tagRepo tagdomain.Repository
+	logger  *slog.Logger
 }
 
 // NewService creates a new task service
-func NewService(repo domain.Repository, logger *slog.Logger) *Service {
+func NewService(repo domain.Repository, tagRepo tagdomain.Repository, logger *slog.Logger) *Service {
 	return &Service{
-		repo:   repo,
-		logger: logger,
+		repo:    repo,
+		tagRepo: tagRepo,
+		logger:  logger,
 	}
 }
 
 // CreateTask creates a new task
-func (s *Service) CreateTask(ctx context.Context, title, notes string) (*domain.Task, error) {
+func (s *Service) CreateTask(ctx context.Context, title, notes string, tagNames []string) (*domain.Task, error) {
 	ctx, span := tracer.Start(ctx, "CreateTask", trace.WithAttributes(
 		attribute.String("title", title),
 	))
@@ -43,7 +46,19 @@ func (s *Service) CreateTask(ctx context.Context, title, notes string) (*domain.
 		return nil, err
 	}
 
-	task := domain.NewTask(title, notes, userID)
+	// Convert tag names to tag IDs (create tags if they don't exist)
+	tagIDs := make([]uuid.UUID, 0, len(tagNames))
+	for _, tagName := range tagNames {
+		tag, err := s.tagRepo.GetOrCreate(ctx, tagName, userID)
+		if err != nil {
+			s.logger.ErrorContext(ctx, "failed to get or create tag", "tag_name", tagName, "error", err)
+			span.RecordError(err)
+			return nil, err
+		}
+		tagIDs = append(tagIDs, tag.ID)
+	}
+
+	task := domain.NewTask(title, notes, userID, tagIDs)
 	if err := s.repo.Create(ctx, task); err != nil {
 		s.logger.ErrorContext(ctx, "failed to create task", "error", err)
 		span.RecordError(err)
@@ -80,7 +95,7 @@ func (s *Service) GetTask(ctx context.Context, id uuid.UUID) (*domain.Task, erro
 }
 
 // UpdateTask updates a task
-func (s *Service) UpdateTask(ctx context.Context, id uuid.UUID, title, notes string) (*domain.Task, error) {
+func (s *Service) UpdateTask(ctx context.Context, id uuid.UUID, title, notes string, tagNames []string) (*domain.Task, error) {
 	ctx, span := tracer.Start(ctx, "UpdateTask", trace.WithAttributes(
 		attribute.String("id", id.String()),
 		attribute.String("title", title),
@@ -102,11 +117,29 @@ func (s *Service) UpdateTask(ctx context.Context, id uuid.UUID, title, notes str
 		return nil, err
 	}
 
-	task.Update(title, notes)
+	// Convert tag names to tag IDs (create tags if they don't exist)
+	tagIDs := make([]uuid.UUID, 0, len(tagNames))
+	for _, tagName := range tagNames {
+		tag, err := s.tagRepo.GetOrCreate(ctx, tagName, userID)
+		if err != nil {
+			s.logger.ErrorContext(ctx, "failed to get or create tag", "tag_name", tagName, "error", err)
+			span.RecordError(err)
+			return nil, err
+		}
+		tagIDs = append(tagIDs, tag.ID)
+	}
+
+	task.Update(title, notes, tagIDs)
 	if err := s.repo.Update(ctx, task); err != nil {
 		s.logger.ErrorContext(ctx, "failed to update task", "id", id, "error", err)
 		span.RecordError(err)
 		return nil, err
+	}
+
+	// Clean up orphaned tags
+	if err := s.tagRepo.DeleteOrphans(ctx, userID); err != nil {
+		s.logger.WarnContext(ctx, "failed to clean up orphan tags", "error", err)
+		// Don't fail the update if tag cleanup fails
 	}
 
 	s.logger.InfoContext(ctx, "task updated", "id", task.ID)
@@ -134,12 +167,18 @@ func (s *Service) DeleteTask(ctx context.Context, id uuid.UUID) error {
 		return err
 	}
 
+	// Clean up orphaned tags
+	if err := s.tagRepo.DeleteOrphans(ctx, userID); err != nil {
+		s.logger.WarnContext(ctx, "failed to clean up orphan tags", "error", err)
+		// Don't fail the delete if tag cleanup fails
+	}
+
 	s.logger.InfoContext(ctx, "task deleted", "id", id)
 	return nil
 }
 
 // ListTasks lists tasks
-func (s *Service) ListTasks(ctx context.Context, limit, offset int) ([]*domain.Task, error) {
+func (s *Service) ListTasks(ctx context.Context, filterTagIDs []uuid.UUID, limit, offset int) ([]*domain.Task, error) {
 	ctx, span := tracer.Start(ctx, "ListTasks", trace.WithAttributes(
 		attribute.Int("limit", limit),
 		attribute.Int("offset", offset),
@@ -154,7 +193,7 @@ func (s *Service) ListTasks(ctx context.Context, limit, offset int) ([]*domain.T
 		return nil, err
 	}
 
-	tasks, err := s.repo.List(ctx, userID, limit, offset)
+	tasks, err := s.repo.List(ctx, userID, filterTagIDs, limit, offset)
 	if err != nil {
 		s.logger.ErrorContext(ctx, "failed to list tasks", "error", err)
 		span.RecordError(err)

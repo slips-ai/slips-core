@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	tagv1 "github.com/slips-ai/slips-core/gen/api/proto/tag/v1"
+	tagv1 "github.com/slips-ai/slips-core/gen/go/tag/v1"
 	"github.com/slips-ai/slips-core/internal/tag/application"
 	"github.com/slips-ai/slips-core/pkg/grpcerrors"
 	"google.golang.org/grpc/codes"

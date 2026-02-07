@@ -12,5 +12,5 @@ type Repository interface {
 	Get(ctx context.Context, id uuid.UUID, ownerID string) (*Task, error)
 	Update(ctx context.Context, task *Task) error
 	Delete(ctx context.Context, id uuid.UUID, ownerID string) error
-	List(ctx context.Context, ownerID string, limit, offset int) ([]*Task, error)
+	List(ctx context.Context, ownerID string, filterTagIDs []uuid.UUID, limit, offset int) ([]*Task, error)
 }
