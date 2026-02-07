@@ -10,6 +10,22 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// isAuthServicePublicMethod checks if the method is a public Auth Service method that doesn't require authentication
+func isAuthServicePublicMethod(fullMethod string) bool {
+	publicMethods := []string{
+		"/auth.v1.AuthService/GetAuthorizationURL",
+		"/auth.v1.AuthService/HandleCallback",
+		"/auth.v1.AuthService/RefreshToken",
+	}
+
+	for _, method := range publicMethods {
+		if fullMethod == method {
+			return true
+		}
+	}
+	return false
+}
+
 // UnaryServerInterceptor returns a gRPC unary interceptor for JWT authentication
 func UnaryServerInterceptor(validator *JWTValidator) grpc.UnaryServerInterceptor {
 	return func(
@@ -64,6 +80,11 @@ func UnaryServerInterceptorWithMCP(jwtValidator *JWTValidator, mcpValidator MCPT
 		info *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler,
 	) (interface{}, error) {
+		// Skip authentication for specific Auth Service methods
+		if isAuthServicePublicMethod(info.FullMethod) {
+			return handler(ctx, req)
+		}
+
 		// Extract metadata from context
 		md, ok := metadata.FromIncomingContext(ctx)
 		if !ok {

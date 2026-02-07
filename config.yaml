@@ -9,7 +9,7 @@ database:
   host: localhost
   port: 5432
   user: postgres
-  password: CHANGE_ME  # Placeholder only. Set via SLIPS_DATABASE_PASSWORD env var or secrets manager; do not use a real password here.
+  password: postgres
   dbname: slips
   sslmode: disable
 
@@ -23,4 +23,4 @@ auth:
   expected_issuer: identra
   oauth:
     provider: github
-    redirect_url: http://localhost:9090/oauth/callback
+    redirect_url: http://localhost:8080/oauth/callback

@@ -141,6 +141,8 @@ func main() {
 
 	// Build interceptor chain in order: auth first, then (optionally) tracing
 	// Auth runs first to reject unauthenticated requests before creating trace spans
+	// Note: Auth interceptor automatically skips authentication for public Auth Service endpoints
+	// (GetAuthorizationURL, HandleCallback, RefreshToken)
 	interceptors := []grpc.UnaryServerInterceptor{
 		auth.UnaryServerInterceptorWithMCP(jwtValidator, mcptokenService),
 	}
