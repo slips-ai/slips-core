@@ -51,20 +51,32 @@ This starts:
 - PostgreSQL on port 5432
 - Jaeger (tracing UI) on port 16686
 
-### 3. Run database migrations
+### 3. Create databases (manual step)
+
+This repo uses multiple databases locally (at least `slips` for slips-core and `identra` for identra-grpc).
+Create them explicitly:
+
+```bash
+make db-create
+```
+
+### 4. Run database migrations
 
 ```bash
 make migrate-up
 ```
 
-### 4. Generate code
+This project uses the Atlas CLI to run migrations while keeping the existing
+golang-migrate file format (e.g. `001_init.up.sql` / `001_init.down.sql`).
+
+### 5. Generate code
 
 ```bash
 make proto  # Generate gRPC code from proto files
 make sqlc   # Generate Go code from SQL queries
 ```
 
-### 5. Build and run the service
+### 6. Build and run the service
 
 ```bash
 make build
@@ -107,7 +119,7 @@ slips-core/
 
 ### Available Make Commands
 
-- `make tools` - Install development tools (buf, sqlc, migrate)
+- `make tools` - Install development tools (buf, sqlc, atlas)
 - `make proto` - Generate gRPC code from proto files
 - `make sqlc` - Generate database code from SQL queries
 - `make build` - Build the application
@@ -115,8 +127,11 @@ slips-core/
 - `make clean` - Clean build artifacts
 - `make docker-up` - Start Docker services
 - `make docker-down` - Stop Docker services
+- `make db-create` - Create local databases in the Postgres container (default: slips, identra)
 - `make migrate-up` - Run database migrations
-- `make migrate-down` - Rollback database migrations
+- `make migrate-down` - Revert database migrations
+- `make migrate-status` - Show migration status
+- `make migrate-validate` - Validate migration directory checksum (atlas.sum)
 - `make test` - Run tests
 - `make fmt` - Format code
 - `make tidy` - Tidy Go modules
