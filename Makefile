@@ -1,4 +1,4 @@
-.PHONY: all proto sqlc build run clean docker-up docker-down db-create migrate-up migrate-down migrate-hash migrate-validate migrate-status migrate-new migrate-diff test
+.PHONY: all proto sqlc build run clean docker-up docker-down db-create migrate-up migrate-down migrate-hash migrate-validate migrate-status migrate-new migrate-diff test grpcurl-smoke
 
 # Tools
 BUF_VERSION := 1.28.1
@@ -37,6 +37,10 @@ build: proto sqlc
 run: build
 	@echo "Running application..."
 	@./bin/slips-core
+
+# grpcurl smoke tests (requires slips-core running)
+grpcurl-smoke:
+	@./scripts/grpcurl-smoke.sh
 
 # Clean build artifacts
 clean:
