@@ -5,6 +5,7 @@ import (
 
 	authv1 "github.com/slips-ai/slips-core/gen/api/auth/v1"
 	"github.com/slips-ai/slips-core/internal/auth/application"
+	"github.com/slips-ai/slips-core/pkg/auth"
 	"github.com/slips-ai/slips-core/pkg/grpcerrors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -64,8 +65,11 @@ func (s *Server) HandleCallback(ctx context.Context, req *authv1.HandleCallbackR
 	// Extract user ID from token for the response
 	userID := ""
 	if result.AccessToken != "" {
-		// We could extract it, but we'll just use empty string if not available
-		// The username is more important for display purposes
+		extractedUserID, err := auth.ExtractUserIDFromToken(result.AccessToken)
+		if err == nil {
+			userID = extractedUserID
+		}
+		// If extraction fails, we continue with empty userID
 	}
 
 	return &authv1.HandleCallbackResponse{

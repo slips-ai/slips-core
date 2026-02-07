@@ -23,4 +23,4 @@ auth:
   expected_issuer: identra
   oauth:
     provider: github
-    redirect_url: http://localhost:8080/oauth/callback
+    redirect_url: http://localhost:3000/login/callback
