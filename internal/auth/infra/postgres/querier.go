@@ -9,9 +9,9 @@ import (
 )
 
 type Querier interface {
-	GetUserByID(ctx context.Context, id int32) (User, error)
-	GetUserByUserID(ctx context.Context, userID string) (User, error)
-	UpsertUser(ctx context.Context, arg UpsertUserParams) (User, error)
+	GetUserByID(ctx context.Context, id int32) (GetUserByIDRow, error)
+	GetUserByUserID(ctx context.Context, userID string) (GetUserByUserIDRow, error)
+	UpsertUser(ctx context.Context, arg UpsertUserParams) (UpsertUserRow, error)
 }
 
 var _ Querier = (*Queries)(nil)

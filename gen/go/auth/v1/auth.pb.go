@@ -104,6 +104,7 @@ type UserInfo struct {
 	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	Username      string                 `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
 	AvatarUrl     string                 `protobuf:"bytes,3,opt,name=avatar_url,json=avatarUrl,proto3" json:"avatar_url,omitempty"`
+	Email         string                 `protobuf:"bytes,4,opt,name=email,proto3" json:"email,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -155,6 +156,13 @@ func (x *UserInfo) GetUsername() string {
 func (x *UserInfo) GetAvatarUrl() string {
 	if x != nil {
 		return x.AvatarUrl
+	}
+	return ""
+}
+
+func (x *UserInfo) GetEmail() string {
+	if x != nil {
+		return x.Email
 	}
 	return ""
 }
@@ -546,12 +554,13 @@ const file_auth_v1_auth_proto_rawDesc = "" +
 	"\rrefresh_token\x18\x03 \x01(\tR\frefreshToken\x127\n" +
 	"\x18refresh_token_expires_at\x18\x04 \x01(\x03R\x15refreshTokenExpiresAt\x12\x1d\n" +
 	"\n" +
-	"token_type\x18\x05 \x01(\tR\ttokenType\"^\n" +
+	"token_type\x18\x05 \x01(\tR\ttokenType\"t\n" +
 	"\bUserInfo\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1a\n" +
 	"\busername\x18\x02 \x01(\tR\busername\x12\x1d\n" +
 	"\n" +
-	"avatar_url\x18\x03 \x01(\tR\tavatarUrl\"8\n" +
+	"avatar_url\x18\x03 \x01(\tR\tavatarUrl\x12\x14\n" +
+	"\x05email\x18\x04 \x01(\tR\x05email\"8\n" +
 	"\x1aGetAuthorizationURLRequest\x12\x1a\n" +
 	"\bprovider\x18\x01 \x01(\tR\bprovider\"E\n" +
 	"\x1bGetAuthorizationURLResponse\x12\x10\n" +

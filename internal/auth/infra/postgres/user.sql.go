@@ -12,19 +12,30 @@ import (
 )
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, user_id, username, avatar_url, created_at, updated_at
+SELECT id, user_id, username, avatar_url, email, created_at, updated_at
 FROM users
 WHERE id = $1
 `
 
-func (q *Queries) GetUserByID(ctx context.Context, id int32) (User, error) {
+type GetUserByIDRow struct {
+	ID        int32            `json:"id"`
+	UserID    string           `json:"user_id"`
+	Username  pgtype.Text      `json:"username"`
+	AvatarUrl pgtype.Text      `json:"avatar_url"`
+	Email     pgtype.Text      `json:"email"`
+	CreatedAt pgtype.Timestamp `json:"created_at"`
+	UpdatedAt pgtype.Timestamp `json:"updated_at"`
+}
+
+func (q *Queries) GetUserByID(ctx context.Context, id int32) (GetUserByIDRow, error) {
 	row := q.db.QueryRow(ctx, getUserByID, id)
-	var i User
+	var i GetUserByIDRow
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
 		&i.Username,
 		&i.AvatarUrl,
+		&i.Email,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -32,19 +43,30 @@ func (q *Queries) GetUserByID(ctx context.Context, id int32) (User, error) {
 }
 
 const getUserByUserID = `-- name: GetUserByUserID :one
-SELECT id, user_id, username, avatar_url, created_at, updated_at
+SELECT id, user_id, username, avatar_url, email, created_at, updated_at
 FROM users
 WHERE user_id = $1
 `
 
-func (q *Queries) GetUserByUserID(ctx context.Context, userID string) (User, error) {
+type GetUserByUserIDRow struct {
+	ID        int32            `json:"id"`
+	UserID    string           `json:"user_id"`
+	Username  pgtype.Text      `json:"username"`
+	AvatarUrl pgtype.Text      `json:"avatar_url"`
+	Email     pgtype.Text      `json:"email"`
+	CreatedAt pgtype.Timestamp `json:"created_at"`
+	UpdatedAt pgtype.Timestamp `json:"updated_at"`
+}
+
+func (q *Queries) GetUserByUserID(ctx context.Context, userID string) (GetUserByUserIDRow, error) {
 	row := q.db.QueryRow(ctx, getUserByUserID, userID)
-	var i User
+	var i GetUserByUserIDRow
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
 		&i.Username,
 		&i.AvatarUrl,
+		&i.Email,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -52,31 +74,48 @@ func (q *Queries) GetUserByUserID(ctx context.Context, userID string) (User, err
 }
 
 const upsertUser = `-- name: UpsertUser :one
-INSERT INTO users (user_id, username, avatar_url, updated_at)
-VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+INSERT INTO users (user_id, username, avatar_url, email, updated_at)
+VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
 ON CONFLICT (user_id) DO UPDATE
 SET 
-    username = EXCLUDED.username,
-    avatar_url = EXCLUDED.avatar_url,
+    username = COALESCE(users.username, EXCLUDED.username),
+    avatar_url = COALESCE(users.avatar_url, EXCLUDED.avatar_url),
+    email = COALESCE(users.email, EXCLUDED.email),
     updated_at = CURRENT_TIMESTAMP
-WHERE users.username IS NULL OR users.avatar_url IS NULL
-RETURNING id, user_id, username, avatar_url, created_at, updated_at
+RETURNING id, user_id, username, avatar_url, email, created_at, updated_at
 `
 
 type UpsertUserParams struct {
 	UserID    string      `json:"user_id"`
 	Username  pgtype.Text `json:"username"`
 	AvatarUrl pgtype.Text `json:"avatar_url"`
+	Email     pgtype.Text `json:"email"`
 }
 
-func (q *Queries) UpsertUser(ctx context.Context, arg UpsertUserParams) (User, error) {
-	row := q.db.QueryRow(ctx, upsertUser, arg.UserID, arg.Username, arg.AvatarUrl)
-	var i User
+type UpsertUserRow struct {
+	ID        int32            `json:"id"`
+	UserID    string           `json:"user_id"`
+	Username  pgtype.Text      `json:"username"`
+	AvatarUrl pgtype.Text      `json:"avatar_url"`
+	Email     pgtype.Text      `json:"email"`
+	CreatedAt pgtype.Timestamp `json:"created_at"`
+	UpdatedAt pgtype.Timestamp `json:"updated_at"`
+}
+
+func (q *Queries) UpsertUser(ctx context.Context, arg UpsertUserParams) (UpsertUserRow, error) {
+	row := q.db.QueryRow(ctx, upsertUser,
+		arg.UserID,
+		arg.Username,
+		arg.AvatarUrl,
+		arg.Email,
+	)
+	var i UpsertUserRow
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
 		&i.Username,
 		&i.AvatarUrl,
+		&i.Email,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

@@ -26,6 +26,7 @@ func (r *Repository) UpsertUser(ctx context.Context, user *domain.User) (*domain
 		UserID:    user.UserID,
 		Username:  textFromString(user.Username),
 		AvatarUrl: textFromString(user.AvatarURL),
+		Email:     textFromString(user.Email),
 	})
 	if err != nil {
 		return nil, err
@@ -36,6 +37,7 @@ func (r *Repository) UpsertUser(ctx context.Context, user *domain.User) (*domain
 		UserID:    result.UserID,
 		Username:  stringFromText(result.Username),
 		AvatarURL: stringFromText(result.AvatarUrl),
+		Email:     stringFromText(result.Email),
 		CreatedAt: result.CreatedAt.Time,
 		UpdatedAt: result.UpdatedAt.Time,
 	}, nil
@@ -51,6 +53,7 @@ func (r *Repository) GetUserByUserID(ctx context.Context, userID string) (*domai
 	return &domain.User{
 		ID:        int64(result.ID),
 		UserID:    result.UserID,
+		Email:     stringFromText(result.Email),
 		Username:  stringFromText(result.Username),
 		AvatarURL: stringFromText(result.AvatarUrl),
 		CreatedAt: result.CreatedAt.Time,
@@ -69,6 +72,7 @@ func (r *Repository) GetUserByID(ctx context.Context, id int64) (*domain.User, e
 		ID:        int64(result.ID),
 		UserID:    result.UserID,
 		Username:  stringFromText(result.Username),
+		Email:     stringFromText(result.Email),
 		AvatarURL: stringFromText(result.AvatarUrl),
 		CreatedAt: result.CreatedAt.Time,
 		UpdatedAt: result.UpdatedAt.Time,

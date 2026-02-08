@@ -84,6 +84,7 @@ func (s *Server) HandleCallback(ctx context.Context, req *authv1.HandleCallbackR
 			UserId:    userID,
 			Username:  result.Username,
 			AvatarUrl: result.AvatarURL,
+			Email:     result.Email,
 		},
 	}, nil
 }
@@ -122,6 +123,7 @@ func (s *Server) GetUserProfile(ctx context.Context, req *authv1.GetUserProfileR
 		UserInfo: &authv1.UserInfo{
 			UserId:    user.UserID,
 			Username:  user.Username,
+			Email:     user.Email,
 			AvatarUrl: user.AvatarURL,
 		},
 	}, nil

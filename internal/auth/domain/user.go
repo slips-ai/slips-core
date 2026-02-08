@@ -10,15 +10,17 @@ type User struct {
 	UserID    string
 	Username  string
 	AvatarURL string
+	Email     string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
 
 // NewUser creates a new user instance
-func NewUser(userID, username, avatarURL string) *User {
+func NewUser(userID, username, avatarURL, email string) *User {
 	return &User{
 		UserID:    userID,
 		Username:  username,
 		AvatarURL: avatarURL,
+		Email:     email,
 	}
 }

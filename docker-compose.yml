@@ -1,6 +1,6 @@
 services:
   identra-grpc:
-    image: ghcr.io/poly-workshop/identra-grpc:v0.1.6
+    image: ghcr.io/poly-workshop/identra-grpc:v0.1.7
     container_name: identra-grpc
     ports:
       - 50051:50051

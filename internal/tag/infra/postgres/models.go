@@ -49,4 +49,5 @@ type User struct {
 	AvatarUrl pgtype.Text      `json:"avatar_url"`
 	CreatedAt pgtype.Timestamp `json:"created_at"`
 	UpdatedAt pgtype.Timestamp `json:"updated_at"`
+	Email     pgtype.Text      `json:"email"`
 }

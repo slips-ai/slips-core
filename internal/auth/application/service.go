@@ -64,8 +64,8 @@ func (s *Service) HandleCallback(ctx context.Context, code, state string) (*Call
 		return nil, err
 	}
 
-	// Store user info in database only if username and avatar are provided
-	if resp.Username != "" || resp.AvatarUrl != "" {
+	// Store user info in database only if username, avatar, or email are provided
+	if resp.Username != "" || resp.AvatarUrl != "" || resp.Email != "" {
 		// Extract user ID from the access token
 		userID, err := auth.ExtractUserIDFromToken(resp.Token.AccessToken.Token)
 		if err != nil {
@@ -75,7 +75,7 @@ func (s *Service) HandleCallback(ctx context.Context, code, state string) (*Call
 		}
 
 		// Upsert user (only updates if fields are NULL)
-		user := domain.NewUser(userID, resp.Username, resp.AvatarUrl)
+		user := domain.NewUser(userID, resp.Username, resp.AvatarUrl, resp.Email)
 		_, err = s.repo.UpsertUser(ctx, user)
 		if err != nil {
 			s.logger.ErrorContext(ctx, "failed to upsert user", "error", err, "user_id", userID)
@@ -83,7 +83,7 @@ func (s *Service) HandleCallback(ctx context.Context, code, state string) (*Call
 			// Don't fail the entire login if user storage fails
 			// Log the error and continue
 		} else {
-			s.logger.InfoContext(ctx, "user info stored", "user_id", userID, "username", resp.Username)
+			s.logger.InfoContext(ctx, "user info stored", "user_id", userID, "username", resp.Username, "email", resp.Email)
 		}
 	}
 
@@ -95,6 +95,7 @@ func (s *Service) HandleCallback(ctx context.Context, code, state string) (*Call
 		TokenType:             resp.Token.TokenType,
 		Username:              resp.Username,
 		AvatarURL:             resp.AvatarUrl,
+		Email:                 resp.Email,
 	}
 
 	return result, nil
@@ -155,6 +156,7 @@ type CallbackResult struct {
 	RefreshTokenExpiresAt int64
 	TokenType             string
 	Username              string
+	Email                 string
 	AvatarURL             string
 }
 
