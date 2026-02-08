@@ -2,6 +2,8 @@ package config
 
 import (
 	"fmt"
+	"log"
+	"os"
 	"strings"
 
 	"github.com/spf13/viper"
@@ -102,6 +104,23 @@ func Load(configPath string) (*Config, error) {
 	var cfg Config
 	if err := v.Unmarshal(&cfg); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
+	}
+
+	// Log configuration (excluding sensitive data)
+	log.Printf("[CONFIG] GRPC Port: %d", cfg.Server.GRPCPort)
+	log.Printf("[CONFIG] Database Host: %s:%d", cfg.Database.Host, cfg.Database.Port)
+	log.Printf("[CONFIG] Database Name: %s", cfg.Database.DBName)
+	log.Printf("[CONFIG] Tracing Enabled: %t", cfg.Tracing.Enabled)
+	log.Printf("[CONFIG] Auth Identra Endpoint: %s", cfg.Auth.IdentraGRPCEndpoint)
+	log.Printf("[CONFIG] Auth Expected Issuer: %s", cfg.Auth.ExpectedIssuer)
+	log.Printf("[CONFIG] OAuth Provider: %s", cfg.Auth.OAuth.Provider)
+	log.Printf("[CONFIG] OAuth Redirect URL: %s", cfg.Auth.OAuth.RedirectURL)
+
+	// Also log environment variable status for OAuth redirect URL
+	if envVal := os.Getenv("SLIPS_AUTH_OAUTH_REDIRECT_URL"); envVal != "" {
+		log.Printf("[CONFIG] Environment variable SLIPS_AUTH_OAUTH_REDIRECT_URL is set to: %s", envVal)
+	} else {
+		log.Printf("[CONFIG] Environment variable SLIPS_AUTH_OAUTH_REDIRECT_URL is not set")
 	}
 
 	return &cfg, nil
