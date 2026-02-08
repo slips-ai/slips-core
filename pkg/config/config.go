@@ -82,6 +82,23 @@ func Load(configPath string) (*Config, error) {
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	v.AutomaticEnv()
 
+	// Explicitly bind nested config keys to environment variables
+	// This is required for viper to properly handle nested structures
+	_ = v.BindEnv("database.password")
+	_ = v.BindEnv("database.host")
+	_ = v.BindEnv("database.port")
+	_ = v.BindEnv("database.user")
+	_ = v.BindEnv("database.dbname")
+	_ = v.BindEnv("database.sslmode")
+	_ = v.BindEnv("auth.identra_grpc_endpoint")
+	_ = v.BindEnv("auth.expected_issuer")
+	_ = v.BindEnv("auth.oauth.provider")
+	_ = v.BindEnv("auth.oauth.redirect_url")
+	_ = v.BindEnv("server.grpc_port")
+	_ = v.BindEnv("tracing.enabled")
+	_ = v.BindEnv("tracing.service_name")
+	_ = v.BindEnv("tracing.endpoint")
+
 	var cfg Config
 	if err := v.Unmarshal(&cfg); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
