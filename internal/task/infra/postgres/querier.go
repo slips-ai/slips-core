@@ -11,6 +11,7 @@ import (
 )
 
 type Querier interface {
+	ArchiveTask(ctx context.Context, arg ArchiveTaskParams) (ArchiveTaskRow, error)
 	CreateTask(ctx context.Context, arg CreateTaskParams) (CreateTaskRow, error)
 	CreateTaskTag(ctx context.Context, arg CreateTaskTagParams) error
 	DeleteTask(ctx context.Context, arg DeleteTaskParams) error
@@ -18,6 +19,7 @@ type Querier interface {
 	GetTask(ctx context.Context, arg GetTaskParams) (GetTaskRow, error)
 	GetTaskTagIDs(ctx context.Context, taskID pgtype.UUID) ([]pgtype.UUID, error)
 	ListTasks(ctx context.Context, arg ListTasksParams) ([]ListTasksRow, error)
+	UnarchiveTask(ctx context.Context, arg UnarchiveTaskParams) (UnarchiveTaskRow, error)
 	UpdateTask(ctx context.Context, arg UpdateTaskParams) (UpdateTaskRow, error)
 }
 

@@ -39,6 +39,11 @@ func (r *TaskRepository) Create(ctx context.Context, task *domain.Task) error {
 	task.ID = taskID
 	task.CreatedAt = result.CreatedAt.Time
 	task.UpdatedAt = result.UpdatedAt.Time
+	if result.ArchivedAt.Valid {
+		task.ArchivedAt = &result.ArchivedAt.Time
+	} else {
+		task.ArchivedAt = nil
+	}
 
 	// Create task_tags associations
 	for _, tagID := range task.TagIDs {
@@ -97,7 +102,7 @@ func (r *TaskRepository) Get(ctx context.Context, id uuid.UUID, ownerID string) 
 		tagIDs[i] = tagID
 	}
 
-	return &domain.Task{
+	task := &domain.Task{
 		ID:        taskID,
 		Title:     result.Title,
 		Notes:     result.Notes,
@@ -105,7 +110,11 @@ func (r *TaskRepository) Get(ctx context.Context, id uuid.UUID, ownerID string) 
 		OwnerID:   result.OwnerID,
 		CreatedAt: result.CreatedAt.Time,
 		UpdatedAt: result.UpdatedAt.Time,
-	}, nil
+	}
+	if result.ArchivedAt.Valid {
+		task.ArchivedAt = &result.ArchivedAt.Time
+	}
+	return task, nil
 }
 
 // Update updates a task
@@ -163,7 +172,7 @@ func (r *TaskRepository) Delete(ctx context.Context, id uuid.UUID, ownerID strin
 }
 
 // List lists tasks with pagination
-func (r *TaskRepository) List(ctx context.Context, ownerID string, filterTagIDs []uuid.UUID, limit, offset int) ([]*domain.Task, error) {
+func (r *TaskRepository) List(ctx context.Context, ownerID string, filterTagIDs []uuid.UUID, limit, offset int, opts domain.ListOptions) ([]*domain.Task, error) {
 	// Validate parameters to prevent negative values and potential overflow
 	if limit < 0 {
 		limit = 0
@@ -190,6 +199,14 @@ func (r *TaskRepository) List(ctx context.Context, ownerID string, filterTagIDs 
 		Limit:        int32(limit),
 		Offset:       int32(offset),
 		FilterTagIds: pgFilterTagIDs,
+		IncludeArchived: pgtype.Bool{
+			Bool:  opts.IncludeArchived,
+			Valid: true,
+		},
+		ArchivedOnly: pgtype.Bool{
+			Bool:  opts.ArchivedOnly,
+			Valid: true,
+		},
 	})
 	if err != nil {
 		return nil, err
@@ -221,7 +238,7 @@ func (r *TaskRepository) List(ctx context.Context, ownerID string, filterTagIDs 
 			tagIDs[j] = tagID
 		}
 
-		tasks[i] = &domain.Task{
+		task := &domain.Task{
 			ID:        taskID,
 			Title:     result.Title,
 			Notes:     result.Notes,
@@ -230,7 +247,111 @@ func (r *TaskRepository) List(ctx context.Context, ownerID string, filterTagIDs 
 			CreatedAt: result.CreatedAt.Time,
 			UpdatedAt: result.UpdatedAt.Time,
 		}
+		if result.ArchivedAt.Valid {
+			task.ArchivedAt = &result.ArchivedAt.Time
+		}
+		tasks[i] = task
 	}
 
 	return tasks, nil
+}
+
+// Archive archives a task by setting archived_at to current timestamp
+func (r *TaskRepository) Archive(ctx context.Context, id uuid.UUID, ownerID string) (*domain.Task, error) {
+	pgID := pgtype.UUID{
+		Bytes: id,
+		Valid: true,
+	}
+
+	result, err := r.queries.ArchiveTask(ctx, ArchiveTaskParams{
+		ID:      pgID,
+		OwnerID: ownerID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	taskID, err := uuid.FromBytes(result.ID.Bytes[:])
+	if err != nil {
+		return nil, err
+	}
+
+	// Get task tag IDs
+	pgTagIDs, err := r.queries.GetTaskTagIDs(ctx, pgID)
+	if err != nil {
+		return nil, err
+	}
+
+	tagIDs := make([]uuid.UUID, len(pgTagIDs))
+	for i, pgTagID := range pgTagIDs {
+		tagID, err := uuid.FromBytes(pgTagID.Bytes[:])
+		if err != nil {
+			return nil, err
+		}
+		tagIDs[i] = tagID
+	}
+
+	task := &domain.Task{
+		ID:        taskID,
+		Title:     result.Title,
+		Notes:     result.Notes,
+		TagIDs:    tagIDs,
+		OwnerID:   result.OwnerID,
+		CreatedAt: result.CreatedAt.Time,
+		UpdatedAt: result.UpdatedAt.Time,
+	}
+	if result.ArchivedAt.Valid {
+		task.ArchivedAt = &result.ArchivedAt.Time
+	}
+	return task, nil
+}
+
+// Unarchive unarchives a task by setting archived_at to NULL
+func (r *TaskRepository) Unarchive(ctx context.Context, id uuid.UUID, ownerID string) (*domain.Task, error) {
+	pgID := pgtype.UUID{
+		Bytes: id,
+		Valid: true,
+	}
+
+	result, err := r.queries.UnarchiveTask(ctx, UnarchiveTaskParams{
+		ID:      pgID,
+		OwnerID: ownerID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	taskID, err := uuid.FromBytes(result.ID.Bytes[:])
+	if err != nil {
+		return nil, err
+	}
+
+	// Get task tag IDs
+	pgTagIDs, err := r.queries.GetTaskTagIDs(ctx, pgID)
+	if err != nil {
+		return nil, err
+	}
+
+	tagIDs := make([]uuid.UUID, len(pgTagIDs))
+	for i, pgTagID := range pgTagIDs {
+		tagID, err := uuid.FromBytes(pgTagID.Bytes[:])
+		if err != nil {
+			return nil, err
+		}
+		tagIDs[i] = tagID
+	}
+
+	task := &domain.Task{
+		ID:        taskID,
+		Title:     result.Title,
+		Notes:     result.Notes,
+		TagIDs:    tagIDs,
+		OwnerID:   result.OwnerID,
+		CreatedAt: result.CreatedAt.Time,
+		UpdatedAt: result.UpdatedAt.Time,
+	}
+	if result.ArchivedAt.Valid {
+		task.ArchivedAt = &result.ArchivedAt.Time
+	}
+	return task, nil
 }

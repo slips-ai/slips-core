@@ -31,6 +31,7 @@ type Task struct {
 	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	TagIds        []string               `protobuf:"bytes,6,rep,name=tag_ids,json=tagIds,proto3" json:"tag_ids,omitempty"`
+	ArchivedAt    *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=archived_at,json=archivedAt,proto3,oneof" json:"archived_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -103,6 +104,13 @@ func (x *Task) GetUpdatedAt() *timestamppb.Timestamp {
 func (x *Task) GetTagIds() []string {
 	if x != nil {
 		return x.TagIds
+	}
+	return nil
+}
+
+func (x *Task) GetArchivedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ArchivedAt
 	}
 	return nil
 }
@@ -499,19 +507,201 @@ func (*DeleteTaskResponse) Descriptor() ([]byte, []int) {
 	return file_task_v1_task_proto_rawDescGZIP(), []int{8}
 }
 
-// ListTasksRequest is the request message for listing tasks
-type ListTasksRequest struct {
+// ArchiveTaskRequest is the request message for archiving a task
+type ArchiveTaskRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	PageSize      int32                  `protobuf:"varint,1,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
-	PageToken     string                 `protobuf:"bytes,2,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
-	FilterTagIds  []string               `protobuf:"bytes,3,rep,name=filter_tag_ids,json=filterTagIds,proto3" json:"filter_tag_ids,omitempty"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
+func (x *ArchiveTaskRequest) Reset() {
+	*x = ArchiveTaskRequest{}
+	mi := &file_task_v1_task_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ArchiveTaskRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ArchiveTaskRequest) ProtoMessage() {}
+
+func (x *ArchiveTaskRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_task_v1_task_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ArchiveTaskRequest.ProtoReflect.Descriptor instead.
+func (*ArchiveTaskRequest) Descriptor() ([]byte, []int) {
+	return file_task_v1_task_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *ArchiveTaskRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+// ArchiveTaskResponse is the response message for archiving a task
+type ArchiveTaskResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Task          *Task                  `protobuf:"bytes,1,opt,name=task,proto3" json:"task,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ArchiveTaskResponse) Reset() {
+	*x = ArchiveTaskResponse{}
+	mi := &file_task_v1_task_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ArchiveTaskResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ArchiveTaskResponse) ProtoMessage() {}
+
+func (x *ArchiveTaskResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_task_v1_task_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ArchiveTaskResponse.ProtoReflect.Descriptor instead.
+func (*ArchiveTaskResponse) Descriptor() ([]byte, []int) {
+	return file_task_v1_task_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *ArchiveTaskResponse) GetTask() *Task {
+	if x != nil {
+		return x.Task
+	}
+	return nil
+}
+
+// UnarchiveTaskRequest is the request message for unarchiving a task
+type UnarchiveTaskRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UnarchiveTaskRequest) Reset() {
+	*x = UnarchiveTaskRequest{}
+	mi := &file_task_v1_task_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UnarchiveTaskRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UnarchiveTaskRequest) ProtoMessage() {}
+
+func (x *UnarchiveTaskRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_task_v1_task_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UnarchiveTaskRequest.ProtoReflect.Descriptor instead.
+func (*UnarchiveTaskRequest) Descriptor() ([]byte, []int) {
+	return file_task_v1_task_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *UnarchiveTaskRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+// UnarchiveTaskResponse is the response message for unarchiving a task
+type UnarchiveTaskResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Task          *Task                  `protobuf:"bytes,1,opt,name=task,proto3" json:"task,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UnarchiveTaskResponse) Reset() {
+	*x = UnarchiveTaskResponse{}
+	mi := &file_task_v1_task_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UnarchiveTaskResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UnarchiveTaskResponse) ProtoMessage() {}
+
+func (x *UnarchiveTaskResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_task_v1_task_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UnarchiveTaskResponse.ProtoReflect.Descriptor instead.
+func (*UnarchiveTaskResponse) Descriptor() ([]byte, []int) {
+	return file_task_v1_task_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *UnarchiveTaskResponse) GetTask() *Task {
+	if x != nil {
+		return x.Task
+	}
+	return nil
+}
+
+// ListTasksRequest is the request message for listing tasks
+type ListTasksRequest struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	PageSize        int32                  `protobuf:"varint,1,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	PageToken       string                 `protobuf:"bytes,2,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
+	FilterTagIds    []string               `protobuf:"bytes,3,rep,name=filter_tag_ids,json=filterTagIds,proto3" json:"filter_tag_ids,omitempty"`
+	IncludeArchived *bool                  `protobuf:"varint,4,opt,name=include_archived,json=includeArchived,proto3,oneof" json:"include_archived,omitempty"`
+	ArchivedOnly    *bool                  `protobuf:"varint,5,opt,name=archived_only,json=archivedOnly,proto3,oneof" json:"archived_only,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
 func (x *ListTasksRequest) Reset() {
 	*x = ListTasksRequest{}
-	mi := &file_task_v1_task_proto_msgTypes[9]
+	mi := &file_task_v1_task_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -523,7 +713,7 @@ func (x *ListTasksRequest) String() string {
 func (*ListTasksRequest) ProtoMessage() {}
 
 func (x *ListTasksRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_task_v1_task_proto_msgTypes[9]
+	mi := &file_task_v1_task_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -536,7 +726,7 @@ func (x *ListTasksRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTasksRequest.ProtoReflect.Descriptor instead.
 func (*ListTasksRequest) Descriptor() ([]byte, []int) {
-	return file_task_v1_task_proto_rawDescGZIP(), []int{9}
+	return file_task_v1_task_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *ListTasksRequest) GetPageSize() int32 {
@@ -560,6 +750,20 @@ func (x *ListTasksRequest) GetFilterTagIds() []string {
 	return nil
 }
 
+func (x *ListTasksRequest) GetIncludeArchived() bool {
+	if x != nil && x.IncludeArchived != nil {
+		return *x.IncludeArchived
+	}
+	return false
+}
+
+func (x *ListTasksRequest) GetArchivedOnly() bool {
+	if x != nil && x.ArchivedOnly != nil {
+		return *x.ArchivedOnly
+	}
+	return false
+}
+
 // ListTasksResponse is the response message for listing tasks
 type ListTasksResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -571,7 +775,7 @@ type ListTasksResponse struct {
 
 func (x *ListTasksResponse) Reset() {
 	*x = ListTasksResponse{}
-	mi := &file_task_v1_task_proto_msgTypes[10]
+	mi := &file_task_v1_task_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -583,7 +787,7 @@ func (x *ListTasksResponse) String() string {
 func (*ListTasksResponse) ProtoMessage() {}
 
 func (x *ListTasksResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_task_v1_task_proto_msgTypes[10]
+	mi := &file_task_v1_task_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -596,7 +800,7 @@ func (x *ListTasksResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTasksResponse.ProtoReflect.Descriptor instead.
 func (*ListTasksResponse) Descriptor() ([]byte, []int) {
-	return file_task_v1_task_proto_rawDescGZIP(), []int{10}
+	return file_task_v1_task_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *ListTasksResponse) GetTasks() []*Task {
@@ -617,7 +821,7 @@ var File_task_v1_task_proto protoreflect.FileDescriptor
 
 const file_task_v1_task_proto_rawDesc = "" +
 	"\n" +
-	"\x12task/v1/task.proto\x12\atask.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\xd1\x01\n" +
+	"\x12task/v1/task.proto\x12\atask.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\xa3\x02\n" +
 	"\x04Task\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x14\n" +
@@ -626,7 +830,10 @@ const file_task_v1_task_proto_rawDesc = "" +
 	"created_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
 	"updated_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12\x17\n" +
-	"\atag_ids\x18\x06 \x03(\tR\x06tagIds\"\\\n" +
+	"\atag_ids\x18\x06 \x03(\tR\x06tagIds\x12@\n" +
+	"\varchived_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampH\x00R\n" +
+	"archivedAt\x88\x01\x01B\x0e\n" +
+	"\f_archived_at\"\\\n" +
 	"\x11CreateTaskRequest\x12\x14\n" +
 	"\x05title\x18\x01 \x01(\tR\x05title\x12\x14\n" +
 	"\x05notes\x18\x02 \x01(\tR\x05notes\x12\x1b\n" +
@@ -646,15 +853,27 @@ const file_task_v1_task_proto_rawDesc = "" +
 	"\x04task\x18\x01 \x01(\v2\r.task.v1.TaskR\x04task\"#\n" +
 	"\x11DeleteTaskRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"\x14\n" +
-	"\x12DeleteTaskResponse\"t\n" +
+	"\x12DeleteTaskResponse\"$\n" +
+	"\x12ArchiveTaskRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"8\n" +
+	"\x13ArchiveTaskResponse\x12!\n" +
+	"\x04task\x18\x01 \x01(\v2\r.task.v1.TaskR\x04task\"&\n" +
+	"\x14UnarchiveTaskRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\":\n" +
+	"\x15UnarchiveTaskResponse\x12!\n" +
+	"\x04task\x18\x01 \x01(\v2\r.task.v1.TaskR\x04task\"\xf5\x01\n" +
 	"\x10ListTasksRequest\x12\x1b\n" +
 	"\tpage_size\x18\x01 \x01(\x05R\bpageSize\x12\x1d\n" +
 	"\n" +
 	"page_token\x18\x02 \x01(\tR\tpageToken\x12$\n" +
-	"\x0efilter_tag_ids\x18\x03 \x03(\tR\ffilterTagIds\"`\n" +
+	"\x0efilter_tag_ids\x18\x03 \x03(\tR\ffilterTagIds\x12.\n" +
+	"\x10include_archived\x18\x04 \x01(\bH\x00R\x0fincludeArchived\x88\x01\x01\x12(\n" +
+	"\rarchived_only\x18\x05 \x01(\bH\x01R\farchivedOnly\x88\x01\x01B\x13\n" +
+	"\x11_include_archivedB\x10\n" +
+	"\x0e_archived_only\"`\n" +
 	"\x11ListTasksResponse\x12#\n" +
 	"\x05tasks\x18\x01 \x03(\v2\r.task.v1.TaskR\x05tasks\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken2\xe4\x02\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken2\xfe\x03\n" +
 	"\vTaskService\x12E\n" +
 	"\n" +
 	"CreateTask\x12\x1a.task.v1.CreateTaskRequest\x1a\x1b.task.v1.CreateTaskResponse\x12<\n" +
@@ -663,7 +882,9 @@ const file_task_v1_task_proto_rawDesc = "" +
 	"UpdateTask\x12\x1a.task.v1.UpdateTaskRequest\x1a\x1b.task.v1.UpdateTaskResponse\x12E\n" +
 	"\n" +
 	"DeleteTask\x12\x1a.task.v1.DeleteTaskRequest\x1a\x1b.task.v1.DeleteTaskResponse\x12B\n" +
-	"\tListTasks\x12\x19.task.v1.ListTasksRequest\x1a\x1a.task.v1.ListTasksResponseB\x8b\x01\n" +
+	"\tListTasks\x12\x19.task.v1.ListTasksRequest\x1a\x1a.task.v1.ListTasksResponse\x12H\n" +
+	"\vArchiveTask\x12\x1b.task.v1.ArchiveTaskRequest\x1a\x1c.task.v1.ArchiveTaskResponse\x12N\n" +
+	"\rUnarchiveTask\x12\x1d.task.v1.UnarchiveTaskRequest\x1a\x1e.task.v1.UnarchiveTaskResponseB\x8b\x01\n" +
 	"\vcom.task.v1B\tTaskProtoP\x01Z4github.com/slips-ai/slips-core/gen/go/task/v1;taskv1\xa2\x02\x03TXX\xaa\x02\aTask.V1\xca\x02\aTask\\V1\xe2\x02\x13Task\\V1\\GPBMetadata\xea\x02\bTask::V1b\x06proto3"
 
 var (
@@ -678,7 +899,7 @@ func file_task_v1_task_proto_rawDescGZIP() []byte {
 	return file_task_v1_task_proto_rawDescData
 }
 
-var file_task_v1_task_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
+var file_task_v1_task_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
 var file_task_v1_task_proto_goTypes = []any{
 	(*Task)(nil),                  // 0: task.v1.Task
 	(*CreateTaskRequest)(nil),     // 1: task.v1.CreateTaskRequest
@@ -689,32 +910,43 @@ var file_task_v1_task_proto_goTypes = []any{
 	(*UpdateTaskResponse)(nil),    // 6: task.v1.UpdateTaskResponse
 	(*DeleteTaskRequest)(nil),     // 7: task.v1.DeleteTaskRequest
 	(*DeleteTaskResponse)(nil),    // 8: task.v1.DeleteTaskResponse
-	(*ListTasksRequest)(nil),      // 9: task.v1.ListTasksRequest
-	(*ListTasksResponse)(nil),     // 10: task.v1.ListTasksResponse
-	(*timestamppb.Timestamp)(nil), // 11: google.protobuf.Timestamp
+	(*ArchiveTaskRequest)(nil),    // 9: task.v1.ArchiveTaskRequest
+	(*ArchiveTaskResponse)(nil),   // 10: task.v1.ArchiveTaskResponse
+	(*UnarchiveTaskRequest)(nil),  // 11: task.v1.UnarchiveTaskRequest
+	(*UnarchiveTaskResponse)(nil), // 12: task.v1.UnarchiveTaskResponse
+	(*ListTasksRequest)(nil),      // 13: task.v1.ListTasksRequest
+	(*ListTasksResponse)(nil),     // 14: task.v1.ListTasksResponse
+	(*timestamppb.Timestamp)(nil), // 15: google.protobuf.Timestamp
 }
 var file_task_v1_task_proto_depIdxs = []int32{
-	11, // 0: task.v1.Task.created_at:type_name -> google.protobuf.Timestamp
-	11, // 1: task.v1.Task.updated_at:type_name -> google.protobuf.Timestamp
-	0,  // 2: task.v1.CreateTaskResponse.task:type_name -> task.v1.Task
-	0,  // 3: task.v1.GetTaskResponse.task:type_name -> task.v1.Task
-	0,  // 4: task.v1.UpdateTaskResponse.task:type_name -> task.v1.Task
-	0,  // 5: task.v1.ListTasksResponse.tasks:type_name -> task.v1.Task
-	1,  // 6: task.v1.TaskService.CreateTask:input_type -> task.v1.CreateTaskRequest
-	3,  // 7: task.v1.TaskService.GetTask:input_type -> task.v1.GetTaskRequest
-	5,  // 8: task.v1.TaskService.UpdateTask:input_type -> task.v1.UpdateTaskRequest
-	7,  // 9: task.v1.TaskService.DeleteTask:input_type -> task.v1.DeleteTaskRequest
-	9,  // 10: task.v1.TaskService.ListTasks:input_type -> task.v1.ListTasksRequest
-	2,  // 11: task.v1.TaskService.CreateTask:output_type -> task.v1.CreateTaskResponse
-	4,  // 12: task.v1.TaskService.GetTask:output_type -> task.v1.GetTaskResponse
-	6,  // 13: task.v1.TaskService.UpdateTask:output_type -> task.v1.UpdateTaskResponse
-	8,  // 14: task.v1.TaskService.DeleteTask:output_type -> task.v1.DeleteTaskResponse
-	10, // 15: task.v1.TaskService.ListTasks:output_type -> task.v1.ListTasksResponse
-	11, // [11:16] is the sub-list for method output_type
-	6,  // [6:11] is the sub-list for method input_type
-	6,  // [6:6] is the sub-list for extension type_name
-	6,  // [6:6] is the sub-list for extension extendee
-	0,  // [0:6] is the sub-list for field type_name
+	15, // 0: task.v1.Task.created_at:type_name -> google.protobuf.Timestamp
+	15, // 1: task.v1.Task.updated_at:type_name -> google.protobuf.Timestamp
+	15, // 2: task.v1.Task.archived_at:type_name -> google.protobuf.Timestamp
+	0,  // 3: task.v1.CreateTaskResponse.task:type_name -> task.v1.Task
+	0,  // 4: task.v1.GetTaskResponse.task:type_name -> task.v1.Task
+	0,  // 5: task.v1.UpdateTaskResponse.task:type_name -> task.v1.Task
+	0,  // 6: task.v1.ArchiveTaskResponse.task:type_name -> task.v1.Task
+	0,  // 7: task.v1.UnarchiveTaskResponse.task:type_name -> task.v1.Task
+	0,  // 8: task.v1.ListTasksResponse.tasks:type_name -> task.v1.Task
+	1,  // 9: task.v1.TaskService.CreateTask:input_type -> task.v1.CreateTaskRequest
+	3,  // 10: task.v1.TaskService.GetTask:input_type -> task.v1.GetTaskRequest
+	5,  // 11: task.v1.TaskService.UpdateTask:input_type -> task.v1.UpdateTaskRequest
+	7,  // 12: task.v1.TaskService.DeleteTask:input_type -> task.v1.DeleteTaskRequest
+	13, // 13: task.v1.TaskService.ListTasks:input_type -> task.v1.ListTasksRequest
+	9,  // 14: task.v1.TaskService.ArchiveTask:input_type -> task.v1.ArchiveTaskRequest
+	11, // 15: task.v1.TaskService.UnarchiveTask:input_type -> task.v1.UnarchiveTaskRequest
+	2,  // 16: task.v1.TaskService.CreateTask:output_type -> task.v1.CreateTaskResponse
+	4,  // 17: task.v1.TaskService.GetTask:output_type -> task.v1.GetTaskResponse
+	6,  // 18: task.v1.TaskService.UpdateTask:output_type -> task.v1.UpdateTaskResponse
+	8,  // 19: task.v1.TaskService.DeleteTask:output_type -> task.v1.DeleteTaskResponse
+	14, // 20: task.v1.TaskService.ListTasks:output_type -> task.v1.ListTasksResponse
+	10, // 21: task.v1.TaskService.ArchiveTask:output_type -> task.v1.ArchiveTaskResponse
+	12, // 22: task.v1.TaskService.UnarchiveTask:output_type -> task.v1.UnarchiveTaskResponse
+	16, // [16:23] is the sub-list for method output_type
+	9,  // [9:16] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_task_v1_task_proto_init() }
@@ -722,13 +954,15 @@ func file_task_v1_task_proto_init() {
 	if File_task_v1_task_proto != nil {
 		return
 	}
+	file_task_v1_task_proto_msgTypes[0].OneofWrappers = []any{}
+	file_task_v1_task_proto_msgTypes[13].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_task_v1_task_proto_rawDesc), len(file_task_v1_task_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   11,
+			NumMessages:   15,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

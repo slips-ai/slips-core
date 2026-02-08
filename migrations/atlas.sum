@@ -1,7 +1,8 @@
-h1:hzTYK9BL0hDfRdT5FZ3C8turi4PXfvWaJjbQm25q2us=
+h1:Vr7iJQ3VEycr9xDlfCSiXf80opTPmZvgECoK6yrQ0rk=
 001_init.up.sql h1:E/W+jNjHKXZPdJtwjGkaSScuZ9+mINN1YwvQWyt42PA=
 002_add_owner_id.up.sql h1:3O6LkNKOqn9T1UKNPZF4nbsjNybvkF4AE0v8AJyXchs=
 003_add_mcp_tokens.up.sql h1:dSDgzB/wp1cvSKA6UXAPEq0e+l7NIg8CwkhqTL9oM4I=
 004_add_users.up.sql h1:Edbdy6SXDgFJay0Q4xAK7XRd05H71nSyp+hNiBbABVI=
 005_create_task_tags.up.sql h1:5jAKgmfsEi0hfYsZO1AuWAeFTPU2uhtP7hdlEBT2k7U=
 006_add_user_email.up.sql h1:TXC5DqoWJNCzVCEtpZfWq57jti0iOddyuIimKr7lwJk=
+007_add_task_archived.up.sql h1:44B9qey3aspSvXsR3D/XNBRKkOMUc91OWO6ecO3ubHs=

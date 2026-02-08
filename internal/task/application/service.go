@@ -178,10 +178,12 @@ func (s *Service) DeleteTask(ctx context.Context, id uuid.UUID) error {
 }
 
 // ListTasks lists tasks
-func (s *Service) ListTasks(ctx context.Context, filterTagIDs []uuid.UUID, limit, offset int) ([]*domain.Task, error) {
+func (s *Service) ListTasks(ctx context.Context, filterTagIDs []uuid.UUID, limit, offset int, includeArchived, archivedOnly bool) ([]*domain.Task, error) {
 	ctx, span := tracer.Start(ctx, "ListTasks", trace.WithAttributes(
 		attribute.Int("limit", limit),
 		attribute.Int("offset", offset),
+		attribute.Bool("include_archived", includeArchived),
+		attribute.Bool("archived_only", archivedOnly),
 	))
 	defer span.End()
 
@@ -193,7 +195,12 @@ func (s *Service) ListTasks(ctx context.Context, filterTagIDs []uuid.UUID, limit
 		return nil, err
 	}
 
-	tasks, err := s.repo.List(ctx, userID, filterTagIDs, limit, offset)
+	opts := domain.ListOptions{
+		IncludeArchived: includeArchived,
+		ArchivedOnly:    archivedOnly,
+	}
+
+	tasks, err := s.repo.List(ctx, userID, filterTagIDs, limit, offset, opts)
 	if err != nil {
 		s.logger.ErrorContext(ctx, "failed to list tasks", "error", err)
 		span.RecordError(err)
@@ -201,4 +208,56 @@ func (s *Service) ListTasks(ctx context.Context, filterTagIDs []uuid.UUID, limit
 	}
 
 	return tasks, nil
+}
+
+// ArchiveTask archives a task
+func (s *Service) ArchiveTask(ctx context.Context, id uuid.UUID) (*domain.Task, error) {
+	ctx, span := tracer.Start(ctx, "ArchiveTask", trace.WithAttributes(
+		attribute.String("id", id.String()),
+	))
+	defer span.End()
+
+	// Extract user ID from context
+	userID, err := auth.GetUserID(ctx)
+	if err != nil {
+		s.logger.ErrorContext(ctx, "failed to get user ID from context", "error", err)
+		span.RecordError(err)
+		return nil, err
+	}
+
+	task, err := s.repo.Archive(ctx, id, userID)
+	if err != nil {
+		s.logger.ErrorContext(ctx, "failed to archive task", "id", id, "error", err)
+		span.RecordError(err)
+		return nil, err
+	}
+
+	s.logger.InfoContext(ctx, "task archived", "id", id)
+	return task, nil
+}
+
+// UnarchiveTask unarchives a task
+func (s *Service) UnarchiveTask(ctx context.Context, id uuid.UUID) (*domain.Task, error) {
+	ctx, span := tracer.Start(ctx, "UnarchiveTask", trace.WithAttributes(
+		attribute.String("id", id.String()),
+	))
+	defer span.End()
+
+	// Extract user ID from context
+	userID, err := auth.GetUserID(ctx)
+	if err != nil {
+		s.logger.ErrorContext(ctx, "failed to get user ID from context", "error", err)
+		span.RecordError(err)
+		return nil, err
+	}
+
+	task, err := s.repo.Unarchive(ctx, id, userID)
+	if err != nil {
+		s.logger.ErrorContext(ctx, "failed to unarchive task", "id", id, "error", err)
+		span.RecordError(err)
+		return nil, err
+	}
+
+	s.logger.InfoContext(ctx, "task unarchived", "id", id)
+	return task, nil
 }

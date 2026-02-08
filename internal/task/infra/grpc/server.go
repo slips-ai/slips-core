@@ -141,7 +141,11 @@ func (s *TaskServer) ListTasks(ctx context.Context, req *taskv1.ListTasksRequest
 		filterTagIDs = append(filterTagIDs, tagID)
 	}
 
-	tasks, err := s.service.ListTasks(ctx, filterTagIDs, pageSize, offset)
+	// Parse archive filter options
+	includeArchived := req.IncludeArchived != nil && *req.IncludeArchived
+	archivedOnly := req.ArchivedOnly != nil && *req.ArchivedOnly
+
+	tasks, err := s.service.ListTasks(ctx, filterTagIDs, pageSize, offset, includeArchived, archivedOnly)
 	if err != nil {
 		return nil, grpcerrors.ToGRPCError(err, "failed to list tasks")
 	}
@@ -165,7 +169,7 @@ func taskToProto(task *domain.Task) *taskv1.Task {
 		tagIDs[i] = tagID.String()
 	}
 
-	return &taskv1.Task{
+	protoTask := &taskv1.Task{
 		Id:        task.ID.String(),
 		Title:     task.Title,
 		Notes:     task.Notes,
@@ -173,4 +177,44 @@ func taskToProto(task *domain.Task) *taskv1.Task {
 		UpdatedAt: timestamppb.New(task.UpdatedAt),
 		TagIds:    tagIDs,
 	}
+
+	if task.ArchivedAt != nil {
+		protoTask.ArchivedAt = timestamppb.New(*task.ArchivedAt)
+	}
+
+	return protoTask
+}
+
+// ArchiveTask archives a task
+func (s *TaskServer) ArchiveTask(ctx context.Context, req *taskv1.ArchiveTaskRequest) (*taskv1.ArchiveTaskResponse, error) {
+	id, err := uuid.Parse(req.Id)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid task ID format")
+	}
+
+	task, err := s.service.ArchiveTask(ctx, id)
+	if err != nil {
+		return nil, grpcerrors.ToGRPCError(err, "failed to archive task")
+	}
+
+	return &taskv1.ArchiveTaskResponse{
+		Task: taskToProto(task),
+	}, nil
+}
+
+// UnarchiveTask unarchives a task
+func (s *TaskServer) UnarchiveTask(ctx context.Context, req *taskv1.UnarchiveTaskRequest) (*taskv1.UnarchiveTaskResponse, error) {
+	id, err := uuid.Parse(req.Id)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid task ID format")
+	}
+
+	task, err := s.service.UnarchiveTask(ctx, id)
+	if err != nil {
+		return nil, grpcerrors.ToGRPCError(err, "failed to unarchive task")
+	}
+
+	return &taskv1.UnarchiveTaskResponse{
+		Task: taskToProto(task),
+	}, nil
 }

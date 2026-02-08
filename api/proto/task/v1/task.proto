@@ -14,6 +14,7 @@ message Task {
   google.protobuf.Timestamp created_at = 4;
   google.protobuf.Timestamp updated_at = 5;
   repeated string tag_ids = 6;
+  optional google.protobuf.Timestamp archived_at = 7;
 }
 
 // CreateTaskRequest is the request message for creating a task
@@ -59,11 +60,33 @@ message DeleteTaskRequest {
 // DeleteTaskResponse is the response message for deleting a task
 message DeleteTaskResponse {}
 
+// ArchiveTaskRequest is the request message for archiving a task
+message ArchiveTaskRequest {
+  string id = 1;
+}
+
+// ArchiveTaskResponse is the response message for archiving a task
+message ArchiveTaskResponse {
+  Task task = 1;
+}
+
+// UnarchiveTaskRequest is the request message for unarchiving a task
+message UnarchiveTaskRequest {
+  string id = 1;
+}
+
+// UnarchiveTaskResponse is the response message for unarchiving a task
+message UnarchiveTaskResponse {
+  Task task = 1;
+}
+
 // ListTasksRequest is the request message for listing tasks
 message ListTasksRequest {
   int32 page_size = 1;
   string page_token = 2;
   repeated string filter_tag_ids = 3;
+  optional bool include_archived = 4;
+  optional bool archived_only = 5;
 }
 
 // ListTasksResponse is the response message for listing tasks
@@ -79,4 +102,6 @@ service TaskService {
   rpc UpdateTask(UpdateTaskRequest) returns (UpdateTaskResponse);
   rpc DeleteTask(DeleteTaskRequest) returns (DeleteTaskResponse);
   rpc ListTasks(ListTasksRequest) returns (ListTasksResponse);
+  rpc ArchiveTask(ArchiveTaskRequest) returns (ArchiveTaskResponse);
+  rpc UnarchiveTask(UnarchiveTaskRequest) returns (UnarchiveTaskResponse);
 }
