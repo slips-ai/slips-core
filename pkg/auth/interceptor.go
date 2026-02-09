@@ -33,7 +33,14 @@ func UnaryServerInterceptor(validator *JWTValidator) grpc.UnaryServerInterceptor
 		req interface{},
 		info *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler,
-	) (interface{}, error) {
+	) (resp interface{}, err error) {
+		// Recover from panics during authentication and convert to 401
+		defer func() {
+			if r := recover(); r != nil {
+				err = status.Errorf(codes.Unauthenticated, "authentication error: %v", r)
+			}
+		}()
+
 		// Extract metadata from context
 		md, ok := metadata.FromIncomingContext(ctx)
 		if !ok {
@@ -79,11 +86,18 @@ func UnaryServerInterceptorWithMCP(jwtValidator *JWTValidator, mcpValidator MCPT
 		req interface{},
 		info *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler,
-	) (interface{}, error) {
+	) (resp interface{}, err error) {
 		// Skip authentication for specific Auth Service methods
 		if isAuthServicePublicMethod(info.FullMethod) {
 			return handler(ctx, req)
 		}
+
+		// Recover from panics during authentication and convert to 401
+		defer func() {
+			if r := recover(); r != nil {
+				err = status.Errorf(codes.Unauthenticated, "authentication error: %v", r)
+			}
+		}()
 
 		// Extract metadata from context
 		md, ok := metadata.FromIncomingContext(ctx)
