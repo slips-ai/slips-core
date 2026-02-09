@@ -209,3 +209,67 @@ type mockMCPTokenValidator struct{}
 func (m *mockMCPTokenValidator) ValidateToken(ctx context.Context, token uuid.UUID) (string, error) {
 	return "test-user-id", nil
 }
+
+func TestUnaryServerInterceptor_PanicRecovery(t *testing.T) {
+	// Create a nil validator to simulate a panic scenario
+	var validator *JWTValidator
+	interceptor := UnaryServerInterceptor(validator)
+
+	// Create context with valid authorization header format
+	md := metadata.New(map[string]string{"authorization": "Bearer some-token"})
+	ctx := metadata.NewIncomingContext(context.Background(), md)
+
+	_, err := interceptor(ctx, nil, &grpc.UnaryServerInfo{}, mockHandler)
+
+	if err == nil {
+		t.Fatal("expected error from panic recovery, got nil")
+	}
+
+	st, ok := status.FromError(err)
+	if !ok {
+		t.Fatal("expected gRPC status error")
+	}
+
+	// The panic should be converted to Unauthenticated (401), not Internal (500)
+	if st.Code() != codes.Unauthenticated {
+		t.Errorf("expected Unauthenticated code (401), got %v (which would be 500 for Internal)", st.Code())
+	}
+
+	// Error message should indicate it's an authentication error
+	t.Logf("Got error message: %s", st.Message())
+}
+
+func TestUnaryServerInterceptorWithMCP_PanicRecovery(t *testing.T) {
+	// Create a nil JWT validator to simulate a panic scenario
+	var jwtValidator *JWTValidator
+	mockMCPValidator := &mockMCPTokenValidator{}
+
+	interceptor := UnaryServerInterceptorWithMCP(jwtValidator, mockMCPValidator)
+
+	// Create context with JWT Bearer token (will trigger panic in validator)
+	md := metadata.New(map[string]string{"authorization": "Bearer some-token"})
+	ctx := metadata.NewIncomingContext(context.Background(), md)
+
+	info := &grpc.UnaryServerInfo{
+		FullMethod: "/task.v1.TaskService/CreateTask",
+	}
+
+	_, err := interceptor(ctx, nil, info, mockHandler)
+
+	if err == nil {
+		t.Fatal("expected error from panic recovery, got nil")
+	}
+
+	st, ok := status.FromError(err)
+	if !ok {
+		t.Fatal("expected gRPC status error")
+	}
+
+	// The panic should be converted to Unauthenticated (401), not Internal (500)
+	if st.Code() != codes.Unauthenticated {
+		t.Errorf("expected Unauthenticated code (401), got %v (which would be 500 for Internal)", st.Code())
+	}
+
+	// Error message should indicate it's an authentication error
+	t.Logf("Got error message: %s", st.Message())
+}
