@@ -155,3 +155,15 @@ func TestValidateStartDate_InboxWithDate_Error(t *testing.T) {
 		t.Fatal("expected error for inbox with non-nil date")
 	}
 }
+
+func TestValidateStartDate_UnknownKind_Error(t *testing.T) {
+	task := &Task{
+		StartDateKind: StartDateKind("unknown"),
+		StartDate:     nil,
+	}
+	err := task.ValidateStartDate()
+	if err == nil {
+		t.Fatal("expected error for unknown start_date_kind")
+	}
+}
+

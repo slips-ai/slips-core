@@ -104,7 +104,7 @@ func (s *Service) GetTask(ctx context.Context, id uuid.UUID) (*domain.Task, erro
 }
 
 // UpdateTask updates a task
-func (s *Service) UpdateTask(ctx context.Context, id uuid.UUID, title, notes string, tagNames []string, startDateKind string, startDate *time.Time) (*domain.Task, error) {
+func (s *Service) UpdateTask(ctx context.Context, id uuid.UUID, title, notes string, tagNames []string, startDateKind *string, startDate *time.Time) (*domain.Task, error) {
 	ctx, span := tracer.Start(ctx, "UpdateTask", trace.WithAttributes(
 		attribute.String("id", id.String()),
 		attribute.String("title", title),
@@ -140,11 +140,13 @@ func (s *Service) UpdateTask(ctx context.Context, id uuid.UUID, title, notes str
 
 	task.Update(title, notes, tagIDs)
 
-	// Set start date if provided
-	task.SetStartDate(domain.StartDateKind(startDateKind), startDate)
-	if err := task.ValidateStartDate(); err != nil {
-		span.RecordError(err)
-		return nil, err
+	// Set start date only if provided (non-nil)
+	if startDateKind != nil {
+		task.SetStartDate(domain.StartDateKind(*startDateKind), startDate)
+		if err := task.ValidateStartDate(); err != nil {
+			span.RecordError(err)
+			return nil, err
+		}
 	}
 
 	if err := s.repo.Update(ctx, task); err != nil {
