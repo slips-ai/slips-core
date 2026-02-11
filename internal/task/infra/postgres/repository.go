@@ -384,7 +384,9 @@ func pgDateToTime(d pgtype.Date) *time.Time {
 // Returns an invalid pgtype.Date if the time is nil.
 func timeToPgDate(t *time.Time) pgtype.Date {
 	if t != nil {
-		return pgtype.Date{Time: *t, Valid: true}
+		year, month, day := t.In(time.UTC).Date()
+		normalized := time.Date(year, month, day, 0, 0, 0, 0, time.UTC)
+		return pgtype.Date{Time: normalized, Valid: true}
 	}
 	return pgtype.Date{Valid: false}
 }
