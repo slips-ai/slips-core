@@ -96,6 +96,10 @@ func (s *TaskServer) UpdateTask(ctx context.Context, req *taskv1.UpdateTaskReque
 	var startDateKind *string
 	var startDate *time.Time
 	if req.StartDateKind != nil || req.StartDate != nil {
+		// Reject requests where start_date is provided without start_date_kind
+		if req.StartDate != nil && req.StartDateKind == nil {
+			return nil, status.Error(codes.InvalidArgument, "start_date_kind is required when start_date is provided")
+		}
 		kind, date, err := parseStartDateFields(req.StartDateKind, req.StartDate)
 		if err != nil {
 			return nil, err

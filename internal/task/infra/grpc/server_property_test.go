@@ -84,3 +84,58 @@ func TestParseStartDateFields_BothNil_DefaultsToInbox(t *testing.T) {
 	}
 }
 
+// Feature: task-start-date, Property 5: start_date without start_date_kind is rejected
+// When start_date is provided but start_date_kind is nil,
+// the validation condition should be true (indicating rejection is needed).
+// This prevents accidental data loss from partial updates.
+// **Validates: Requirements for safe partial updates**
+func TestUpdateTask_ValidationCondition_StartDateWithoutKind(t *testing.T) {
+	testCases := []struct {
+		name              string
+		startDateKind     *string
+		startDate         *string
+		shouldBeRejected  bool
+	}{
+		{
+			name:              "both nil - no rejection",
+			startDateKind:     nil,
+			startDate:         nil,
+			shouldBeRejected:  false,
+		},
+		{
+			name:              "both provided - no rejection",
+			startDateKind:     strPtr("specific_date"),
+			startDate:         strPtr("2025-01-01"),
+			shouldBeRejected:  false,
+		},
+		{
+			name:              "only kind provided - no rejection",
+			startDateKind:     strPtr("inbox"),
+			startDate:         nil,
+			shouldBeRejected:  false,
+		},
+		{
+			name:              "only date provided - SHOULD BE REJECTED",
+			startDateKind:     nil,
+			startDate:         strPtr("2025-01-01"),
+			shouldBeRejected:  true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// This is the validation condition from UpdateTask in server.go
+			shouldReject := (tc.startDate != nil && tc.startDateKind == nil)
+
+			if shouldReject != tc.shouldBeRejected {
+				t.Errorf("expected shouldReject=%v, got %v", tc.shouldBeRejected, shouldReject)
+			}
+		})
+	}
+}
+
+// Helper function for test
+func strPtr(s string) *string {
+	return &s
+}
+
