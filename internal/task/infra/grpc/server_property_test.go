@@ -64,10 +64,11 @@ func TestProperty3_InvalidDateFormat_Rejected(t *testing.T) {
 
 // Feature: task-start-date, Property 4: 更新时省略start_date字段不影响现有值
 // When both start_date_kind and start_date are nil (omitted),
-// parseStartDateFields should not be called, preserving existing task values.
-// This is a regression test to prevent accidental data loss from partial updates.
+// parseStartDateFields defaults to inbox. This is acceptable for CreateTask.
+// For UpdateTask, the caller should NOT call parseStartDateFields when both are nil
+// (this is handled at the UpdateTask level to preserve existing values).
 // **Validates: Requirements 3.6**
-func TestParseStartDateFields_BothNil_ReturnsDefaultInbox(t *testing.T) {
+func TestParseStartDateFields_BothNil_DefaultsToInbox(t *testing.T) {
 	// When both parameters are nil, parseStartDateFields defaults to inbox.
 	// This is acceptable for CreateTask, but for UpdateTask we should NOT call
 	// parseStartDateFields at all when both are nil (handled at the caller level).
