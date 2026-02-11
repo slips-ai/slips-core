@@ -91,10 +91,17 @@ func (s *TaskServer) UpdateTask(ctx context.Context, req *taskv1.UpdateTaskReque
 		return nil, err
 	}
 
-	// Parse and validate start_date_kind and start_date
-	startDateKind, startDate, err := parseStartDateFields(req.StartDateKind, req.StartDate)
-	if err != nil {
-		return nil, err
+	// Parse and validate start_date_kind and start_date only if provided.
+	// If both fields are nil, treat that as "no change" to the task's start date.
+	var startDateKind *string
+	var startDate *time.Time
+	if req.StartDateKind != nil || req.StartDate != nil {
+		kind, date, err := parseStartDateFields(req.StartDateKind, req.StartDate)
+		if err != nil {
+			return nil, err
+		}
+		startDateKind = &kind
+		startDate = date
 	}
 
 	task, err := s.service.UpdateTask(ctx, id, req.Title, req.Notes, req.TagNames, startDateKind, startDate)

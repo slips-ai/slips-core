@@ -87,6 +87,9 @@ func (t *Task) SetStartDate(kind StartDateKind, date *time.Time) {
 
 // ValidateStartDate validates the consistency of StartDateKind and StartDate.
 func (t *Task) ValidateStartDate() error {
+	if !t.StartDateKind.IsValid() {
+		return errors.New("invalid start_date_kind: must be 'inbox' or 'specific_date'")
+	}
 	if t.StartDateKind == StartDateKindSpecificDate && t.StartDate == nil {
 		return errors.New("start_date is required when start_date_kind is specific_date")
 	}
