@@ -126,7 +126,7 @@ func TestUpdateTask_ValidationCondition_StartDateWithoutKind(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// This is the validation condition from UpdateTask in server.go
 			shouldReject := (tc.startDate != nil && tc.startDateKind == nil)
-			
+
 			if shouldReject != tc.shouldBeRejected {
 				t.Errorf("expected shouldReject=%v, got %v", tc.shouldBeRejected, shouldReject)
 			}
