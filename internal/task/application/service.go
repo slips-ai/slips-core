@@ -3,6 +3,7 @@ package application
 import (
 	"context"
 	"log/slog"
+	"time"
 
 	"github.com/google/uuid"
 	tagdomain "github.com/slips-ai/slips-core/internal/tag/domain"
@@ -32,7 +33,7 @@ func NewService(repo domain.Repository, tagRepo tagdomain.Repository, logger *sl
 }
 
 // CreateTask creates a new task
-func (s *Service) CreateTask(ctx context.Context, title, notes string, tagNames []string) (*domain.Task, error) {
+func (s *Service) CreateTask(ctx context.Context, title, notes string, tagNames []string, startDateKind string, startDate *time.Time) (*domain.Task, error) {
 	ctx, span := tracer.Start(ctx, "CreateTask", trace.WithAttributes(
 		attribute.String("title", title),
 	))
@@ -59,6 +60,14 @@ func (s *Service) CreateTask(ctx context.Context, title, notes string, tagNames 
 	}
 
 	task := domain.NewTask(title, notes, userID, tagIDs)
+
+	// Set start date if provided
+	task.SetStartDate(domain.StartDateKind(startDateKind), startDate)
+	if err := task.ValidateStartDate(); err != nil {
+		span.RecordError(err)
+		return nil, err
+	}
+
 	if err := s.repo.Create(ctx, task); err != nil {
 		s.logger.ErrorContext(ctx, "failed to create task", "error", err)
 		span.RecordError(err)
@@ -95,7 +104,7 @@ func (s *Service) GetTask(ctx context.Context, id uuid.UUID) (*domain.Task, erro
 }
 
 // UpdateTask updates a task
-func (s *Service) UpdateTask(ctx context.Context, id uuid.UUID, title, notes string, tagNames []string) (*domain.Task, error) {
+func (s *Service) UpdateTask(ctx context.Context, id uuid.UUID, title, notes string, tagNames []string, startDateKind *string, startDate *time.Time) (*domain.Task, error) {
 	ctx, span := tracer.Start(ctx, "UpdateTask", trace.WithAttributes(
 		attribute.String("id", id.String()),
 		attribute.String("title", title),
@@ -130,6 +139,16 @@ func (s *Service) UpdateTask(ctx context.Context, id uuid.UUID, title, notes str
 	}
 
 	task.Update(title, notes, tagIDs)
+
+	// Set start date only if provided (non-nil)
+	if startDateKind != nil {
+		task.SetStartDate(domain.StartDateKind(*startDateKind), startDate)
+		if err := task.ValidateStartDate(); err != nil {
+			span.RecordError(err)
+			return nil, err
+		}
+	}
+
 	if err := s.repo.Update(ctx, task); err != nil {
 		s.logger.ErrorContext(ctx, "failed to update task", "id", id, "error", err)
 		span.RecordError(err)

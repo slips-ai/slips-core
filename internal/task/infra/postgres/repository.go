@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -24,9 +25,11 @@ func NewTaskRepository(pool *pgxpool.Pool) *TaskRepository {
 // Create creates a new task
 func (r *TaskRepository) Create(ctx context.Context, task *domain.Task) error {
 	result, err := r.queries.CreateTask(ctx, CreateTaskParams{
-		Title:   task.Title,
-		Notes:   task.Notes,
-		OwnerID: task.OwnerID,
+		Title:         task.Title,
+		Notes:         task.Notes,
+		OwnerID:       task.OwnerID,
+		StartDateKind: string(task.StartDateKind),
+		StartDate:     timeToPgDate(task.StartDate),
 	})
 	if err != nil {
 		return err
@@ -44,6 +47,8 @@ func (r *TaskRepository) Create(ctx context.Context, task *domain.Task) error {
 	} else {
 		task.ArchivedAt = nil
 	}
+	task.StartDateKind = domain.StartDateKind(result.StartDateKind)
+	task.StartDate = pgDateToTime(result.StartDate)
 
 	// Create task_tags associations
 	for _, tagID := range task.TagIDs {
@@ -103,13 +108,15 @@ func (r *TaskRepository) Get(ctx context.Context, id uuid.UUID, ownerID string) 
 	}
 
 	task := &domain.Task{
-		ID:        taskID,
-		Title:     result.Title,
-		Notes:     result.Notes,
-		TagIDs:    tagIDs,
-		OwnerID:   result.OwnerID,
-		CreatedAt: result.CreatedAt.Time,
-		UpdatedAt: result.UpdatedAt.Time,
+		ID:            taskID,
+		Title:         result.Title,
+		Notes:         result.Notes,
+		TagIDs:        tagIDs,
+		OwnerID:       result.OwnerID,
+		CreatedAt:     result.CreatedAt.Time,
+		UpdatedAt:     result.UpdatedAt.Time,
+		StartDateKind: domain.StartDateKind(result.StartDateKind),
+		StartDate:     pgDateToTime(result.StartDate),
 	}
 	if result.ArchivedAt.Valid {
 		task.ArchivedAt = &result.ArchivedAt.Time
@@ -125,10 +132,12 @@ func (r *TaskRepository) Update(ctx context.Context, task *domain.Task) error {
 	}
 
 	result, err := r.queries.UpdateTask(ctx, UpdateTaskParams{
-		ID:      pgID,
-		Title:   task.Title,
-		Notes:   task.Notes,
-		OwnerID: task.OwnerID,
+		ID:            pgID,
+		Title:         task.Title,
+		Notes:         task.Notes,
+		OwnerID:       task.OwnerID,
+		StartDateKind: string(task.StartDateKind),
+		StartDate:     timeToPgDate(task.StartDate),
 	})
 	if err != nil {
 		return err
@@ -239,13 +248,15 @@ func (r *TaskRepository) List(ctx context.Context, ownerID string, filterTagIDs 
 		}
 
 		task := &domain.Task{
-			ID:        taskID,
-			Title:     result.Title,
-			Notes:     result.Notes,
-			TagIDs:    tagIDs,
-			OwnerID:   result.OwnerID,
-			CreatedAt: result.CreatedAt.Time,
-			UpdatedAt: result.UpdatedAt.Time,
+			ID:            taskID,
+			Title:         result.Title,
+			Notes:         result.Notes,
+			TagIDs:        tagIDs,
+			OwnerID:       result.OwnerID,
+			CreatedAt:     result.CreatedAt.Time,
+			UpdatedAt:     result.UpdatedAt.Time,
+			StartDateKind: domain.StartDateKind(result.StartDateKind),
+			StartDate:     pgDateToTime(result.StartDate),
 		}
 		if result.ArchivedAt.Valid {
 			task.ArchivedAt = &result.ArchivedAt.Time
@@ -292,13 +303,15 @@ func (r *TaskRepository) Archive(ctx context.Context, id uuid.UUID, ownerID stri
 	}
 
 	task := &domain.Task{
-		ID:        taskID,
-		Title:     result.Title,
-		Notes:     result.Notes,
-		TagIDs:    tagIDs,
-		OwnerID:   result.OwnerID,
-		CreatedAt: result.CreatedAt.Time,
-		UpdatedAt: result.UpdatedAt.Time,
+		ID:            taskID,
+		Title:         result.Title,
+		Notes:         result.Notes,
+		TagIDs:        tagIDs,
+		OwnerID:       result.OwnerID,
+		CreatedAt:     result.CreatedAt.Time,
+		UpdatedAt:     result.UpdatedAt.Time,
+		StartDateKind: domain.StartDateKind(result.StartDateKind),
+		StartDate:     pgDateToTime(result.StartDate),
 	}
 	if result.ArchivedAt.Valid {
 		task.ArchivedAt = &result.ArchivedAt.Time
@@ -342,16 +355,39 @@ func (r *TaskRepository) Unarchive(ctx context.Context, id uuid.UUID, ownerID st
 	}
 
 	task := &domain.Task{
-		ID:        taskID,
-		Title:     result.Title,
-		Notes:     result.Notes,
-		TagIDs:    tagIDs,
-		OwnerID:   result.OwnerID,
-		CreatedAt: result.CreatedAt.Time,
-		UpdatedAt: result.UpdatedAt.Time,
+		ID:            taskID,
+		Title:         result.Title,
+		Notes:         result.Notes,
+		TagIDs:        tagIDs,
+		OwnerID:       result.OwnerID,
+		CreatedAt:     result.CreatedAt.Time,
+		UpdatedAt:     result.UpdatedAt.Time,
+		StartDateKind: domain.StartDateKind(result.StartDateKind),
+		StartDate:     pgDateToTime(result.StartDate),
 	}
 	if result.ArchivedAt.Valid {
 		task.ArchivedAt = &result.ArchivedAt.Time
 	}
 	return task, nil
 }
+// pgDateToTime converts a pgtype.Date to *time.Time.
+// Returns nil if the date is not valid.
+func pgDateToTime(d pgtype.Date) *time.Time {
+	if d.Valid {
+		t := d.Time
+		return &t
+	}
+	return nil
+}
+
+// timeToPgDate converts a *time.Time to pgtype.Date.
+// Returns an invalid pgtype.Date if the time is nil.
+func timeToPgDate(t *time.Time) pgtype.Date {
+	if t != nil {
+		year, month, day := t.In(time.UTC).Date()
+		normalized := time.Date(year, month, day, 0, 0, 0, 0, time.UTC)
+		return pgtype.Date{Time: normalized, Valid: true}
+	}
+	return pgtype.Date{Valid: false}
+}
+

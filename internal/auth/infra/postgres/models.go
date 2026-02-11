@@ -28,13 +28,15 @@ type Tag struct {
 }
 
 type Task struct {
-	ID         pgtype.UUID        `json:"id"`
-	Title      string             `json:"title"`
-	Notes      string             `json:"notes"`
-	CreatedAt  pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
-	OwnerID    string             `json:"owner_id"`
-	ArchivedAt pgtype.Timestamptz `json:"archived_at"`
+	ID            pgtype.UUID        `json:"id"`
+	Title         string             `json:"title"`
+	Notes         string             `json:"notes"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
+	OwnerID       string             `json:"owner_id"`
+	ArchivedAt    pgtype.Timestamptz `json:"archived_at"`
+	StartDateKind string             `json:"start_date_kind"`
+	StartDate     pgtype.Date        `json:"start_date"`
 }
 
 type TaskTag struct {

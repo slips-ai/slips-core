@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 	taskv1 "github.com/slips-ai/slips-core/gen/go/task/v1"
@@ -39,7 +40,13 @@ func (s *TaskServer) CreateTask(ctx context.Context, req *taskv1.CreateTaskReque
 		return nil, err
 	}
 
-	task, err := s.service.CreateTask(ctx, req.Title, req.Notes, req.TagNames)
+	// Parse and validate start_date_kind and start_date
+	startDateKind, startDate, err := parseStartDateFields(req.StartDateKind, req.StartDate)
+	if err != nil {
+		return nil, err
+	}
+
+	task, err := s.service.CreateTask(ctx, req.Title, req.Notes, req.TagNames, startDateKind, startDate)
 	if err != nil {
 		return nil, grpcerrors.ToGRPCError(err, "failed to create task")
 	}
@@ -84,7 +91,24 @@ func (s *TaskServer) UpdateTask(ctx context.Context, req *taskv1.UpdateTaskReque
 		return nil, err
 	}
 
-	task, err := s.service.UpdateTask(ctx, id, req.Title, req.Notes, req.TagNames)
+	// Parse and validate start_date_kind and start_date only if provided.
+	// If both fields are nil, treat that as "no change" to the task's start date.
+	var startDateKind *string
+	var startDate *time.Time
+	if req.StartDateKind != nil || req.StartDate != nil {
+		// Reject requests where start_date is provided without start_date_kind
+		if req.StartDate != nil && req.StartDateKind == nil {
+			return nil, status.Error(codes.InvalidArgument, "start_date_kind is required when start_date is provided")
+		}
+		kind, date, err := parseStartDateFields(req.StartDateKind, req.StartDate)
+		if err != nil {
+			return nil, err
+		}
+		startDateKind = &kind
+		startDate = date
+	}
+
+	task, err := s.service.UpdateTask(ctx, id, req.Title, req.Notes, req.TagNames, startDateKind, startDate)
 	if err != nil {
 		return nil, grpcerrors.ToGRPCError(err, "failed to update task")
 	}
@@ -170,20 +194,55 @@ func taskToProto(task *domain.Task) *taskv1.Task {
 	}
 
 	protoTask := &taskv1.Task{
-		Id:        task.ID.String(),
-		Title:     task.Title,
-		Notes:     task.Notes,
-		CreatedAt: timestamppb.New(task.CreatedAt),
-		UpdatedAt: timestamppb.New(task.UpdatedAt),
-		TagIds:    tagIDs,
+		Id:            task.ID.String(),
+		Title:         task.Title,
+		Notes:         task.Notes,
+		CreatedAt:     timestamppb.New(task.CreatedAt),
+		UpdatedAt:     timestamppb.New(task.UpdatedAt),
+		TagIds:        tagIDs,
+		StartDateKind: string(task.StartDateKind),
 	}
 
 	if task.ArchivedAt != nil {
 		protoTask.ArchivedAt = timestamppb.New(*task.ArchivedAt)
 	}
 
+	if task.StartDate != nil {
+		formatted := task.StartDate.Format("2006-01-02")
+		protoTask.StartDate = &formatted
+	}
+
 	return protoTask
 }
+// parseStartDateFields parses and validates optional start_date_kind and start_date
+// from a gRPC request. Returns the parsed kind and date, defaulting to inbox if not provided.
+func parseStartDateFields(kindPtr, datePtr *string) (string, *time.Time, error) {
+	// Default to inbox if not provided
+	kind := string(domain.StartDateKindInbox)
+	if kindPtr != nil {
+		kind = *kindPtr
+	}
+
+	// Validate start_date_kind
+	if !domain.StartDateKind(kind).IsValid() {
+		return "", nil, status.Errorf(codes.InvalidArgument, "invalid start_date_kind: must be 'inbox' or 'specific_date'")
+	}
+
+	var startDate *time.Time
+	if kind == string(domain.StartDateKindSpecificDate) {
+		if datePtr == nil || *datePtr == "" {
+			return "", nil, status.Errorf(codes.InvalidArgument, "start_date is required when start_date_kind is 'specific_date'")
+		}
+		parsed, err := time.Parse("2006-01-02", *datePtr)
+		if err != nil {
+			return "", nil, status.Errorf(codes.InvalidArgument, "invalid start_date format: expected YYYY-MM-DD")
+		}
+		startDate = &parsed
+	}
+
+	return kind, startDate, nil
+}
+
 
 // ArchiveTask archives a task
 func (s *TaskServer) ArchiveTask(ctx context.Context, req *taskv1.ArchiveTaskRequest) (*taskv1.ArchiveTaskResponse, error) {
