@@ -15,7 +15,7 @@ const archiveTask = `-- name: ArchiveTask :one
 UPDATE tasks
 SET archived_at = NOW(), updated_at = NOW()
 WHERE id = $1 AND owner_id = $2
-RETURNING id, title, notes, owner_id, archived_at, created_at, updated_at
+RETURNING id, title, notes, owner_id, archived_at, created_at, updated_at, start_date_kind, start_date
 `
 
 type ArchiveTaskParams struct {
@@ -24,13 +24,15 @@ type ArchiveTaskParams struct {
 }
 
 type ArchiveTaskRow struct {
-	ID         pgtype.UUID        `json:"id"`
-	Title      string             `json:"title"`
-	Notes      string             `json:"notes"`
-	OwnerID    string             `json:"owner_id"`
-	ArchivedAt pgtype.Timestamptz `json:"archived_at"`
-	CreatedAt  pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
+	ID            pgtype.UUID        `json:"id"`
+	Title         string             `json:"title"`
+	Notes         string             `json:"notes"`
+	OwnerID       string             `json:"owner_id"`
+	ArchivedAt    pgtype.Timestamptz `json:"archived_at"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
+	StartDateKind string             `json:"start_date_kind"`
+	StartDate     pgtype.Date        `json:"start_date"`
 }
 
 func (q *Queries) ArchiveTask(ctx context.Context, arg ArchiveTaskParams) (ArchiveTaskRow, error) {
@@ -44,34 +46,46 @@ func (q *Queries) ArchiveTask(ctx context.Context, arg ArchiveTaskParams) (Archi
 		&i.ArchivedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.StartDateKind,
+		&i.StartDate,
 	)
 	return i, err
 }
 
 const createTask = `-- name: CreateTask :one
-INSERT INTO tasks (title, notes, owner_id)
-VALUES ($1, $2, $3)
-RETURNING id, title, notes, owner_id, archived_at, created_at, updated_at
+INSERT INTO tasks (title, notes, owner_id, start_date_kind, start_date)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING id, title, notes, owner_id, archived_at, created_at, updated_at, start_date_kind, start_date
 `
 
 type CreateTaskParams struct {
-	Title   string `json:"title"`
-	Notes   string `json:"notes"`
-	OwnerID string `json:"owner_id"`
+	Title         string      `json:"title"`
+	Notes         string      `json:"notes"`
+	OwnerID       string      `json:"owner_id"`
+	StartDateKind string      `json:"start_date_kind"`
+	StartDate     pgtype.Date `json:"start_date"`
 }
 
 type CreateTaskRow struct {
-	ID         pgtype.UUID        `json:"id"`
-	Title      string             `json:"title"`
-	Notes      string             `json:"notes"`
-	OwnerID    string             `json:"owner_id"`
-	ArchivedAt pgtype.Timestamptz `json:"archived_at"`
-	CreatedAt  pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
+	ID            pgtype.UUID        `json:"id"`
+	Title         string             `json:"title"`
+	Notes         string             `json:"notes"`
+	OwnerID       string             `json:"owner_id"`
+	ArchivedAt    pgtype.Timestamptz `json:"archived_at"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
+	StartDateKind string             `json:"start_date_kind"`
+	StartDate     pgtype.Date        `json:"start_date"`
 }
 
 func (q *Queries) CreateTask(ctx context.Context, arg CreateTaskParams) (CreateTaskRow, error) {
-	row := q.db.QueryRow(ctx, createTask, arg.Title, arg.Notes, arg.OwnerID)
+	row := q.db.QueryRow(ctx, createTask,
+		arg.Title,
+		arg.Notes,
+		arg.OwnerID,
+		arg.StartDateKind,
+		arg.StartDate,
+	)
 	var i CreateTaskRow
 	err := row.Scan(
 		&i.ID,
@@ -81,6 +95,8 @@ func (q *Queries) CreateTask(ctx context.Context, arg CreateTaskParams) (CreateT
 		&i.ArchivedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.StartDateKind,
+		&i.StartDate,
 	)
 	return i, err
 }
@@ -127,7 +143,7 @@ func (q *Queries) DeleteTaskTags(ctx context.Context, taskID pgtype.UUID) error 
 }
 
 const getTask = `-- name: GetTask :one
-SELECT id, title, notes, owner_id, archived_at, created_at, updated_at
+SELECT id, title, notes, owner_id, archived_at, created_at, updated_at, start_date_kind, start_date
 FROM tasks
 WHERE id = $1 AND owner_id = $2
 `
@@ -138,13 +154,15 @@ type GetTaskParams struct {
 }
 
 type GetTaskRow struct {
-	ID         pgtype.UUID        `json:"id"`
-	Title      string             `json:"title"`
-	Notes      string             `json:"notes"`
-	OwnerID    string             `json:"owner_id"`
-	ArchivedAt pgtype.Timestamptz `json:"archived_at"`
-	CreatedAt  pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
+	ID            pgtype.UUID        `json:"id"`
+	Title         string             `json:"title"`
+	Notes         string             `json:"notes"`
+	OwnerID       string             `json:"owner_id"`
+	ArchivedAt    pgtype.Timestamptz `json:"archived_at"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
+	StartDateKind string             `json:"start_date_kind"`
+	StartDate     pgtype.Date        `json:"start_date"`
 }
 
 func (q *Queries) GetTask(ctx context.Context, arg GetTaskParams) (GetTaskRow, error) {
@@ -158,6 +176,8 @@ func (q *Queries) GetTask(ctx context.Context, arg GetTaskParams) (GetTaskRow, e
 		&i.ArchivedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.StartDateKind,
+		&i.StartDate,
 	)
 	return i, err
 }
@@ -189,7 +209,7 @@ func (q *Queries) GetTaskTagIDs(ctx context.Context, taskID pgtype.UUID) ([]pgty
 }
 
 const listTasks = `-- name: ListTasks :many
-SELECT DISTINCT t.id, t.title, t.notes, t.owner_id, t.archived_at, t.created_at, t.updated_at
+SELECT DISTINCT t.id, t.title, t.notes, t.owner_id, t.archived_at, t.created_at, t.updated_at, t.start_date_kind, t.start_date
 FROM tasks t
 LEFT JOIN task_tags tt ON t.id = tt.task_id
 WHERE t.owner_id = $1
@@ -217,13 +237,15 @@ type ListTasksParams struct {
 }
 
 type ListTasksRow struct {
-	ID         pgtype.UUID        `json:"id"`
-	Title      string             `json:"title"`
-	Notes      string             `json:"notes"`
-	OwnerID    string             `json:"owner_id"`
-	ArchivedAt pgtype.Timestamptz `json:"archived_at"`
-	CreatedAt  pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
+	ID            pgtype.UUID        `json:"id"`
+	Title         string             `json:"title"`
+	Notes         string             `json:"notes"`
+	OwnerID       string             `json:"owner_id"`
+	ArchivedAt    pgtype.Timestamptz `json:"archived_at"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
+	StartDateKind string             `json:"start_date_kind"`
+	StartDate     pgtype.Date        `json:"start_date"`
 }
 
 func (q *Queries) ListTasks(ctx context.Context, arg ListTasksParams) ([]ListTasksRow, error) {
@@ -250,6 +272,8 @@ func (q *Queries) ListTasks(ctx context.Context, arg ListTasksParams) ([]ListTas
 			&i.ArchivedAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.StartDateKind,
+			&i.StartDate,
 		); err != nil {
 			return nil, err
 		}
@@ -265,7 +289,7 @@ const unarchiveTask = `-- name: UnarchiveTask :one
 UPDATE tasks
 SET archived_at = NULL, updated_at = NOW()
 WHERE id = $1 AND owner_id = $2
-RETURNING id, title, notes, owner_id, archived_at, created_at, updated_at
+RETURNING id, title, notes, owner_id, archived_at, created_at, updated_at, start_date_kind, start_date
 `
 
 type UnarchiveTaskParams struct {
@@ -274,13 +298,15 @@ type UnarchiveTaskParams struct {
 }
 
 type UnarchiveTaskRow struct {
-	ID         pgtype.UUID        `json:"id"`
-	Title      string             `json:"title"`
-	Notes      string             `json:"notes"`
-	OwnerID    string             `json:"owner_id"`
-	ArchivedAt pgtype.Timestamptz `json:"archived_at"`
-	CreatedAt  pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
+	ID            pgtype.UUID        `json:"id"`
+	Title         string             `json:"title"`
+	Notes         string             `json:"notes"`
+	OwnerID       string             `json:"owner_id"`
+	ArchivedAt    pgtype.Timestamptz `json:"archived_at"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
+	StartDateKind string             `json:"start_date_kind"`
+	StartDate     pgtype.Date        `json:"start_date"`
 }
 
 func (q *Queries) UnarchiveTask(ctx context.Context, arg UnarchiveTaskParams) (UnarchiveTaskRow, error) {
@@ -294,32 +320,38 @@ func (q *Queries) UnarchiveTask(ctx context.Context, arg UnarchiveTaskParams) (U
 		&i.ArchivedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.StartDateKind,
+		&i.StartDate,
 	)
 	return i, err
 }
 
 const updateTask = `-- name: UpdateTask :one
 UPDATE tasks
-SET title = $2, notes = $3, updated_at = NOW()
+SET title = $2, notes = $3, updated_at = NOW(), start_date_kind = $5, start_date = $6
 WHERE id = $1 AND owner_id = $4
-RETURNING id, title, notes, owner_id, archived_at, created_at, updated_at
+RETURNING id, title, notes, owner_id, archived_at, created_at, updated_at, start_date_kind, start_date
 `
 
 type UpdateTaskParams struct {
-	ID      pgtype.UUID `json:"id"`
-	Title   string      `json:"title"`
-	Notes   string      `json:"notes"`
-	OwnerID string      `json:"owner_id"`
+	ID            pgtype.UUID `json:"id"`
+	Title         string      `json:"title"`
+	Notes         string      `json:"notes"`
+	OwnerID       string      `json:"owner_id"`
+	StartDateKind string      `json:"start_date_kind"`
+	StartDate     pgtype.Date `json:"start_date"`
 }
 
 type UpdateTaskRow struct {
-	ID         pgtype.UUID        `json:"id"`
-	Title      string             `json:"title"`
-	Notes      string             `json:"notes"`
-	OwnerID    string             `json:"owner_id"`
-	ArchivedAt pgtype.Timestamptz `json:"archived_at"`
-	CreatedAt  pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
+	ID            pgtype.UUID        `json:"id"`
+	Title         string             `json:"title"`
+	Notes         string             `json:"notes"`
+	OwnerID       string             `json:"owner_id"`
+	ArchivedAt    pgtype.Timestamptz `json:"archived_at"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
+	StartDateKind string             `json:"start_date_kind"`
+	StartDate     pgtype.Date        `json:"start_date"`
 }
 
 func (q *Queries) UpdateTask(ctx context.Context, arg UpdateTaskParams) (UpdateTaskRow, error) {
@@ -328,6 +360,8 @@ func (q *Queries) UpdateTask(ctx context.Context, arg UpdateTaskParams) (UpdateT
 		arg.Title,
 		arg.Notes,
 		arg.OwnerID,
+		arg.StartDateKind,
+		arg.StartDate,
 	)
 	var i UpdateTaskRow
 	err := row.Scan(
@@ -338,6 +372,8 @@ func (q *Queries) UpdateTask(ctx context.Context, arg UpdateTaskParams) (UpdateT
 		&i.ArchivedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.StartDateKind,
+		&i.StartDate,
 	)
 	return i, err
 }
