@@ -121,10 +121,29 @@ func (s *Server) GetUserProfile(ctx context.Context, req *authv1.GetUserProfileR
 
 	return &authv1.GetUserProfileResponse{
 		UserInfo: &authv1.UserInfo{
-			UserId:    user.UserID,
-			Username:  user.Username,
-			Email:     user.Email,
-			AvatarUrl: user.AvatarURL,
+			UserId:         user.UserID,
+			Username:       user.Username,
+			Email:          user.Email,
+			AvatarUrl:      user.AvatarURL,
+			TavilyMcpToken: user.TavilyMCPToken,
+		},
+	}, nil
+}
+
+// UpdateUserProfile updates current user's profile settings
+func (s *Server) UpdateUserProfile(ctx context.Context, req *authv1.UpdateUserProfileRequest) (*authv1.UpdateUserProfileResponse, error) {
+	user, err := s.service.UpdateUserProfile(ctx, req.TavilyMcpToken)
+	if err != nil {
+		return nil, grpcerrors.ToGRPCError(err, "failed to update user profile")
+	}
+
+	return &authv1.UpdateUserProfileResponse{
+		UserInfo: &authv1.UserInfo{
+			UserId:         user.UserID,
+			Username:       user.Username,
+			Email:          user.Email,
+			AvatarUrl:      user.AvatarURL,
+			TavilyMcpToken: user.TavilyMCPToken,
 		},
 	}, nil
 }

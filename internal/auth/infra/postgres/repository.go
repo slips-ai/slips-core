@@ -23,23 +23,25 @@ func NewRepository(pool *pgxpool.Pool) *Repository {
 // UpsertUser creates or updates a user
 func (r *Repository) UpsertUser(ctx context.Context, user *domain.User) (*domain.User, error) {
 	result, err := r.queries.UpsertUser(ctx, UpsertUserParams{
-		UserID:    user.UserID,
-		Username:  textFromString(user.Username),
-		AvatarUrl: textFromString(user.AvatarURL),
-		Email:     textFromString(user.Email),
+		UserID:         user.UserID,
+		Username:       textFromString(user.Username),
+		AvatarUrl:      textFromString(user.AvatarURL),
+		Email:          textFromString(user.Email),
+		TavilyMcpToken: textFromString(user.TavilyMCPToken),
 	})
 	if err != nil {
 		return nil, err
 	}
 
 	return &domain.User{
-		ID:        int64(result.ID),
-		UserID:    result.UserID,
-		Username:  stringFromText(result.Username),
-		AvatarURL: stringFromText(result.AvatarUrl),
-		Email:     stringFromText(result.Email),
-		CreatedAt: result.CreatedAt.Time,
-		UpdatedAt: result.UpdatedAt.Time,
+		ID:             int64(result.ID),
+		UserID:         result.UserID,
+		Username:       stringFromText(result.Username),
+		AvatarURL:      stringFromText(result.AvatarUrl),
+		Email:          stringFromText(result.Email),
+		TavilyMCPToken: stringFromText(result.TavilyMcpToken),
+		CreatedAt:      result.CreatedAt.Time,
+		UpdatedAt:      result.UpdatedAt.Time,
 	}, nil
 }
 
@@ -51,13 +53,14 @@ func (r *Repository) GetUserByUserID(ctx context.Context, userID string) (*domai
 	}
 
 	return &domain.User{
-		ID:        int64(result.ID),
-		UserID:    result.UserID,
-		Email:     stringFromText(result.Email),
-		Username:  stringFromText(result.Username),
-		AvatarURL: stringFromText(result.AvatarUrl),
-		CreatedAt: result.CreatedAt.Time,
-		UpdatedAt: result.UpdatedAt.Time,
+		ID:             int64(result.ID),
+		UserID:         result.UserID,
+		Email:          stringFromText(result.Email),
+		Username:       stringFromText(result.Username),
+		AvatarURL:      stringFromText(result.AvatarUrl),
+		TavilyMCPToken: stringFromText(result.TavilyMcpToken),
+		CreatedAt:      result.CreatedAt.Time,
+		UpdatedAt:      result.UpdatedAt.Time,
 	}, nil
 }
 
@@ -69,13 +72,36 @@ func (r *Repository) GetUserByID(ctx context.Context, id int64) (*domain.User, e
 	}
 
 	return &domain.User{
-		ID:        int64(result.ID),
-		UserID:    result.UserID,
-		Username:  stringFromText(result.Username),
-		Email:     stringFromText(result.Email),
-		AvatarURL: stringFromText(result.AvatarUrl),
-		CreatedAt: result.CreatedAt.Time,
-		UpdatedAt: result.UpdatedAt.Time,
+		ID:             int64(result.ID),
+		UserID:         result.UserID,
+		Username:       stringFromText(result.Username),
+		Email:          stringFromText(result.Email),
+		AvatarURL:      stringFromText(result.AvatarUrl),
+		TavilyMCPToken: stringFromText(result.TavilyMcpToken),
+		CreatedAt:      result.CreatedAt.Time,
+		UpdatedAt:      result.UpdatedAt.Time,
+	}, nil
+}
+
+// UpdateUserTavilyMCPToken updates Tavily MCP token for a user
+func (r *Repository) UpdateUserTavilyMCPToken(ctx context.Context, userID, tavilyMCPToken string) (*domain.User, error) {
+	result, err := r.queries.UpdateUserTavilyMCPToken(ctx, UpdateUserTavilyMCPTokenParams{
+		UserID:         userID,
+		TavilyMcpToken: textFromString(tavilyMCPToken),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &domain.User{
+		ID:             int64(result.ID),
+		UserID:         result.UserID,
+		Username:       stringFromText(result.Username),
+		AvatarURL:      stringFromText(result.AvatarUrl),
+		Email:          stringFromText(result.Email),
+		TavilyMCPToken: stringFromText(result.TavilyMcpToken),
+		CreatedAt:      result.CreatedAt.Time,
+		UpdatedAt:      result.UpdatedAt.Time,
 	}, nil
 }
 

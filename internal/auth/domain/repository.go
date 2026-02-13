@@ -15,4 +15,7 @@ type Repository interface {
 
 	// GetUserByID retrieves a user by their database ID
 	GetUserByID(ctx context.Context, id int64) (*User, error)
+
+	// UpdateUserTavilyMCPToken updates Tavily MCP token for the given user ID
+	UpdateUserTavilyMCPToken(ctx context.Context, userID, tavilyMCPToken string) (*User, error)
 }

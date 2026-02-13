@@ -11,6 +11,7 @@ import (
 type Querier interface {
 	GetUserByID(ctx context.Context, id int32) (GetUserByIDRow, error)
 	GetUserByUserID(ctx context.Context, userID string) (GetUserByUserIDRow, error)
+	UpdateUserTavilyMCPToken(ctx context.Context, arg UpdateUserTavilyMCPTokenParams) (UpdateUserTavilyMCPTokenRow, error)
 	UpsertUser(ctx context.Context, arg UpsertUserParams) (UpsertUserRow, error)
 }
 

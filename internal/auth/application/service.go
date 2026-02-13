@@ -148,6 +148,28 @@ func (s *Service) GetUserProfile(ctx context.Context) (*domain.User, error) {
 	return user, nil
 }
 
+// UpdateUserProfile updates current user's profile settings
+func (s *Service) UpdateUserProfile(ctx context.Context, tavilyMCPToken string) (*domain.User, error) {
+	ctx, span := tracer.Start(ctx, "UpdateUserProfile")
+	defer span.End()
+
+	userID, err := auth.GetUserID(ctx)
+	if err != nil {
+		s.logger.ErrorContext(ctx, "failed to get user ID from context", "error", err)
+		span.RecordError(err)
+		return nil, err
+	}
+
+	updatedUser, err := s.repo.UpdateUserTavilyMCPToken(ctx, userID, tavilyMCPToken)
+	if err != nil {
+		s.logger.ErrorContext(ctx, "failed to update user profile", "error", err, "user_id", userID)
+		span.RecordError(err)
+		return nil, err
+	}
+
+	return updatedUser, nil
+}
+
 // CallbackResult contains the result of OAuth callback processing
 type CallbackResult struct {
 	AccessToken           string

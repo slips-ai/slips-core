@@ -12,19 +12,20 @@ import (
 )
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, user_id, username, avatar_url, email, created_at, updated_at
+SELECT id, user_id, username, avatar_url, email, tavily_mcp_token, created_at, updated_at
 FROM users
 WHERE id = $1
 `
 
 type GetUserByIDRow struct {
-	ID        int32            `json:"id"`
-	UserID    string           `json:"user_id"`
-	Username  pgtype.Text      `json:"username"`
-	AvatarUrl pgtype.Text      `json:"avatar_url"`
-	Email     pgtype.Text      `json:"email"`
-	CreatedAt pgtype.Timestamp `json:"created_at"`
-	UpdatedAt pgtype.Timestamp `json:"updated_at"`
+	ID             int32            `json:"id"`
+	UserID         string           `json:"user_id"`
+	Username       pgtype.Text      `json:"username"`
+	AvatarUrl      pgtype.Text      `json:"avatar_url"`
+	Email          pgtype.Text      `json:"email"`
+	TavilyMcpToken pgtype.Text      `json:"tavily_mcp_token"`
+	CreatedAt      pgtype.Timestamp `json:"created_at"`
+	UpdatedAt      pgtype.Timestamp `json:"updated_at"`
 }
 
 func (q *Queries) GetUserByID(ctx context.Context, id int32) (GetUserByIDRow, error) {
@@ -36,6 +37,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id int32) (GetUserByIDRow, er
 		&i.Username,
 		&i.AvatarUrl,
 		&i.Email,
+		&i.TavilyMcpToken,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -43,19 +45,20 @@ func (q *Queries) GetUserByID(ctx context.Context, id int32) (GetUserByIDRow, er
 }
 
 const getUserByUserID = `-- name: GetUserByUserID :one
-SELECT id, user_id, username, avatar_url, email, created_at, updated_at
+SELECT id, user_id, username, avatar_url, email, tavily_mcp_token, created_at, updated_at
 FROM users
 WHERE user_id = $1
 `
 
 type GetUserByUserIDRow struct {
-	ID        int32            `json:"id"`
-	UserID    string           `json:"user_id"`
-	Username  pgtype.Text      `json:"username"`
-	AvatarUrl pgtype.Text      `json:"avatar_url"`
-	Email     pgtype.Text      `json:"email"`
-	CreatedAt pgtype.Timestamp `json:"created_at"`
-	UpdatedAt pgtype.Timestamp `json:"updated_at"`
+	ID             int32            `json:"id"`
+	UserID         string           `json:"user_id"`
+	Username       pgtype.Text      `json:"username"`
+	AvatarUrl      pgtype.Text      `json:"avatar_url"`
+	Email          pgtype.Text      `json:"email"`
+	TavilyMcpToken pgtype.Text      `json:"tavily_mcp_token"`
+	CreatedAt      pgtype.Timestamp `json:"created_at"`
+	UpdatedAt      pgtype.Timestamp `json:"updated_at"`
 }
 
 func (q *Queries) GetUserByUserID(ctx context.Context, userID string) (GetUserByUserIDRow, error) {
@@ -67,6 +70,47 @@ func (q *Queries) GetUserByUserID(ctx context.Context, userID string) (GetUserBy
 		&i.Username,
 		&i.AvatarUrl,
 		&i.Email,
+		&i.TavilyMcpToken,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const updateUserTavilyMCPToken = `-- name: UpdateUserTavilyMCPToken :one
+UPDATE users
+SET tavily_mcp_token = $2,
+    updated_at = CURRENT_TIMESTAMP
+WHERE user_id = $1
+RETURNING id, user_id, username, avatar_url, email, tavily_mcp_token, created_at, updated_at
+`
+
+type UpdateUserTavilyMCPTokenParams struct {
+	UserID         string      `json:"user_id"`
+	TavilyMcpToken pgtype.Text `json:"tavily_mcp_token"`
+}
+
+type UpdateUserTavilyMCPTokenRow struct {
+	ID             int32            `json:"id"`
+	UserID         string           `json:"user_id"`
+	Username       pgtype.Text      `json:"username"`
+	AvatarUrl      pgtype.Text      `json:"avatar_url"`
+	Email          pgtype.Text      `json:"email"`
+	TavilyMcpToken pgtype.Text      `json:"tavily_mcp_token"`
+	CreatedAt      pgtype.Timestamp `json:"created_at"`
+	UpdatedAt      pgtype.Timestamp `json:"updated_at"`
+}
+
+func (q *Queries) UpdateUserTavilyMCPToken(ctx context.Context, arg UpdateUserTavilyMCPTokenParams) (UpdateUserTavilyMCPTokenRow, error) {
+	row := q.db.QueryRow(ctx, updateUserTavilyMCPToken, arg.UserID, arg.TavilyMcpToken)
+	var i UpdateUserTavilyMCPTokenRow
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Username,
+		&i.AvatarUrl,
+		&i.Email,
+		&i.TavilyMcpToken,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -74,32 +118,34 @@ func (q *Queries) GetUserByUserID(ctx context.Context, userID string) (GetUserBy
 }
 
 const upsertUser = `-- name: UpsertUser :one
-INSERT INTO users (user_id, username, avatar_url, email, updated_at)
-VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
+INSERT INTO users (user_id, username, avatar_url, email, tavily_mcp_token, updated_at)
+VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
 ON CONFLICT (user_id) DO UPDATE
 SET 
     username = COALESCE(users.username, EXCLUDED.username),
     avatar_url = COALESCE(users.avatar_url, EXCLUDED.avatar_url),
     email = COALESCE(users.email, EXCLUDED.email),
     updated_at = CURRENT_TIMESTAMP
-RETURNING id, user_id, username, avatar_url, email, created_at, updated_at
+RETURNING id, user_id, username, avatar_url, email, tavily_mcp_token, created_at, updated_at
 `
 
 type UpsertUserParams struct {
-	UserID    string      `json:"user_id"`
-	Username  pgtype.Text `json:"username"`
-	AvatarUrl pgtype.Text `json:"avatar_url"`
-	Email     pgtype.Text `json:"email"`
+	UserID         string      `json:"user_id"`
+	Username       pgtype.Text `json:"username"`
+	AvatarUrl      pgtype.Text `json:"avatar_url"`
+	Email          pgtype.Text `json:"email"`
+	TavilyMcpToken pgtype.Text `json:"tavily_mcp_token"`
 }
 
 type UpsertUserRow struct {
-	ID        int32            `json:"id"`
-	UserID    string           `json:"user_id"`
-	Username  pgtype.Text      `json:"username"`
-	AvatarUrl pgtype.Text      `json:"avatar_url"`
-	Email     pgtype.Text      `json:"email"`
-	CreatedAt pgtype.Timestamp `json:"created_at"`
-	UpdatedAt pgtype.Timestamp `json:"updated_at"`
+	ID             int32            `json:"id"`
+	UserID         string           `json:"user_id"`
+	Username       pgtype.Text      `json:"username"`
+	AvatarUrl      pgtype.Text      `json:"avatar_url"`
+	Email          pgtype.Text      `json:"email"`
+	TavilyMcpToken pgtype.Text      `json:"tavily_mcp_token"`
+	CreatedAt      pgtype.Timestamp `json:"created_at"`
+	UpdatedAt      pgtype.Timestamp `json:"updated_at"`
 }
 
 func (q *Queries) UpsertUser(ctx context.Context, arg UpsertUserParams) (UpsertUserRow, error) {
@@ -108,6 +154,7 @@ func (q *Queries) UpsertUser(ctx context.Context, arg UpsertUserParams) (UpsertU
 		arg.Username,
 		arg.AvatarUrl,
 		arg.Email,
+		arg.TavilyMcpToken,
 	)
 	var i UpsertUserRow
 	err := row.Scan(
@@ -116,6 +163,7 @@ func (q *Queries) UpsertUser(ctx context.Context, arg UpsertUserParams) (UpsertU
 		&i.Username,
 		&i.AvatarUrl,
 		&i.Email,
+		&i.TavilyMcpToken,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

@@ -1,4 +1,4 @@
-h1:OluXRjg2bP8dbafw856ExCu5VZv02fdRM6ZaNVAbcOI=
+h1:DKJi81LT20NBEMlPkmezNd9PQtH/c92wSDhZHFRHbhk=
 001_init.up.sql h1:E/W+jNjHKXZPdJtwjGkaSScuZ9+mINN1YwvQWyt42PA=
 002_add_owner_id.up.sql h1:3O6LkNKOqn9T1UKNPZF4nbsjNybvkF4AE0v8AJyXchs=
 003_add_mcp_tokens.up.sql h1:dSDgzB/wp1cvSKA6UXAPEq0e+l7NIg8CwkhqTL9oM4I=
@@ -7,3 +7,4 @@ h1:OluXRjg2bP8dbafw856ExCu5VZv02fdRM6ZaNVAbcOI=
 006_add_user_email.up.sql h1:TXC5DqoWJNCzVCEtpZfWq57jti0iOddyuIimKr7lwJk=
 007_add_task_archived.up.sql h1:44B9qey3aspSvXsR3D/XNBRKkOMUc91OWO6ecO3ubHs=
 008_add_task_start_date.up.sql h1:bUNzPOEgm2TsEDjHK+hMU4SWuywoyEZjP57yOs9FiK4=
+009_add_users_tavily_mcp_token.up.sql h1:NtsBNUhtYrGwOqEO4rqMKzaSZeYUnCLpu0QalziALgY=

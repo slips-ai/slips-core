@@ -19,6 +19,7 @@ message UserInfo {
   string username = 2;
   string avatar_url = 3;
   string email = 4;
+  string tavily_mcp_token = 5;
 }
 
 // GetAuthorizationURLRequest is the request for initiating OAuth flow
@@ -62,10 +63,21 @@ message GetUserProfileResponse {
   UserInfo user_info = 1;
 }
 
+// UpdateUserProfileRequest updates the current user's profile settings
+message UpdateUserProfileRequest {
+  string tavily_mcp_token = 1;
+}
+
+// UpdateUserProfileResponse returns updated user profile information
+message UpdateUserProfileResponse {
+  UserInfo user_info = 1;
+}
+
 // AuthService provides authentication operations including OAuth
 service AuthService {
   rpc GetAuthorizationURL(GetAuthorizationURLRequest) returns (GetAuthorizationURLResponse) {}
   rpc HandleCallback(HandleCallbackRequest) returns (HandleCallbackResponse) {}
   rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse) {}
   rpc GetUserProfile(GetUserProfileRequest) returns (GetUserProfileResponse) {}
+  rpc UpdateUserProfile(UpdateUserProfileRequest) returns (UpdateUserProfileResponse) {}
 }
