@@ -5,7 +5,8 @@ BUF_VERSION := 1.28.1
 SQLC_VERSION := 1.25.0
 ATLAS_VERSION := 1.1.0
 
-ATLAS := $(HOME)/go/bin/atlas
+# Try to find atlas in PATH, otherwise use go-installed version in bin/atlas
+ATLAS := $(shell which atlas 2>/dev/null || echo "$(HOME)/go/bin/atlas")
 
 all: proto sqlc build
 
