@@ -1,7 +1,7 @@
 -- name: CreateTask :one
-INSERT INTO tasks (title, notes, owner_id, start_date_kind, start_date)
-VALUES ($1, $2, $3, $4, $5)
-RETURNING id, title, notes, owner_id, archived_at, created_at, updated_at, start_date_kind, start_date;
+INSERT INTO tasks (title, notes, owner_id, start_date)
+VALUES ($1, $2, $3, $4)
+RETURNING id, title, notes, owner_id, archived_at, created_at, updated_at, start_date;
 
 -- name: CreateTaskTag :exec
 INSERT INTO task_tags (task_id, tag_id)
@@ -18,22 +18,22 @@ FROM task_tags
 WHERE task_id = $1;
 
 -- name: GetTask :one
-SELECT id, title, notes, owner_id, archived_at, created_at, updated_at, start_date_kind, start_date
+SELECT id, title, notes, owner_id, archived_at, created_at, updated_at, start_date
 FROM tasks
 WHERE id = $1 AND owner_id = $2;
 
 -- name: UpdateTask :one
 UPDATE tasks
-SET title = $2, notes = $3, updated_at = NOW(), start_date_kind = $5, start_date = $6
+SET title = $2, notes = $3, updated_at = NOW(), start_date = $5
 WHERE id = $1 AND owner_id = $4
-RETURNING id, title, notes, owner_id, archived_at, created_at, updated_at, start_date_kind, start_date;
+RETURNING id, title, notes, owner_id, archived_at, created_at, updated_at, start_date;
 
 -- name: DeleteTask :exec
 DELETE FROM tasks
 WHERE id = $1 AND owner_id = $2;
 
 -- name: ListTasks :many
-SELECT DISTINCT t.id, t.title, t.notes, t.owner_id, t.archived_at, t.created_at, t.updated_at, t.start_date_kind, t.start_date
+SELECT DISTINCT t.id, t.title, t.notes, t.owner_id, t.archived_at, t.created_at, t.updated_at, t.start_date
 FROM tasks t
 LEFT JOIN task_tags tt ON t.id = tt.task_id
 WHERE t.owner_id = $1
@@ -54,10 +54,10 @@ LIMIT $2 OFFSET $3;
 UPDATE tasks
 SET archived_at = NOW(), updated_at = NOW()
 WHERE id = $1 AND owner_id = $2
-RETURNING id, title, notes, owner_id, archived_at, created_at, updated_at, start_date_kind, start_date;
+RETURNING id, title, notes, owner_id, archived_at, created_at, updated_at, start_date;
 
 -- name: UnarchiveTask :one
 UPDATE tasks
 SET archived_at = NULL, updated_at = NOW()
 WHERE id = $1 AND owner_id = $2
-RETURNING id, title, notes, owner_id, archived_at, created_at, updated_at, start_date_kind, start_date;
+RETURNING id, title, notes, owner_id, archived_at, created_at, updated_at, start_date;

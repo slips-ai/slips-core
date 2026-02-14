@@ -15,8 +15,7 @@ message Task {
   google.protobuf.Timestamp updated_at = 5;
   repeated string tag_ids = 6;
   optional google.protobuf.Timestamp archived_at = 7;
-  string start_date_kind = 8;           // "inbox" or "specific_date"
-  optional string start_date = 9;       // format "YYYY-MM-DD", only set when start_date_kind is "specific_date"
+  optional string start_date = 9;       // format "YYYY-MM-DD", null means inbox
 }
 
 // CreateTaskRequest is the request message for creating a task
@@ -24,8 +23,7 @@ message CreateTaskRequest {
   string title = 1;
   string notes = 2;
   repeated string tag_names = 3;
-  optional string start_date_kind = 4;  // optional, defaults to "inbox"
-  optional string start_date = 5;       // optional, only needed when start_date_kind is "specific_date"
+  optional string start_date = 5;       // optional
 }
 
 // CreateTaskResponse is the response message for creating a task
@@ -49,7 +47,6 @@ message UpdateTaskRequest {
   string title = 2;
   string notes = 3;
   repeated string tag_names = 4;
-  optional string start_date_kind = 5;  // optional
   optional string start_date = 6;       // optional
 }
 
