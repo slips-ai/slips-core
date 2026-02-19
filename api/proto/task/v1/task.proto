@@ -36,6 +36,7 @@ message CreateTaskRequest {
   string notes = 2;
   repeated string tag_names = 3;
   optional string start_date = 5;       // optional
+  repeated string checklist_items = 6;
 }
 
 // CreateTaskResponse is the response message for creating a task

@@ -77,6 +77,13 @@ FROM tasks
 WHERE id = sqlc.arg(task_id) AND owner_id = sqlc.arg(owner_id)
 RETURNING *;
 
+-- name: CreateChecklistItemWithSortOrder :one
+INSERT INTO task_checklist_items (task_id, content, completed, sort_order)
+SELECT sqlc.arg(task_id), sqlc.arg(content), FALSE, sqlc.arg(sort_order)
+FROM tasks
+WHERE id = sqlc.arg(task_id) AND owner_id = sqlc.arg(owner_id)
+RETURNING *;
+
 -- name: UpdateChecklistItemContent :one
 UPDATE task_checklist_items ci
 SET content = sqlc.arg(content), updated_at = NOW()

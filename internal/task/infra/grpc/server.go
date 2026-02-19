@@ -3,6 +3,7 @@ package grpc
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -40,6 +41,15 @@ func (s *TaskServer) CreateTask(ctx context.Context, req *taskv1.CreateTaskReque
 	if err := grpcerrors.ValidateLength(req.Notes, "notes", grpcerrors.MaxNotesLength); err != nil {
 		return nil, err
 	}
+	for i, content := range req.ChecklistItems {
+		fieldName := fmt.Sprintf("checklist_items[%d]", i)
+		if err := grpcerrors.ValidateNotEmpty(content, fieldName); err != nil {
+			return nil, err
+		}
+		if err := grpcerrors.ValidateLength(content, fieldName, grpcerrors.MaxChecklistItemLength); err != nil {
+			return nil, err
+		}
+	}
 
 	// Parse and validate start_date
 	startDate, err := parseStartDateForCreate(req.StartDate)
@@ -47,7 +57,7 @@ func (s *TaskServer) CreateTask(ctx context.Context, req *taskv1.CreateTaskReque
 		return nil, err
 	}
 
-	task, err := s.service.CreateTask(ctx, req.Title, req.Notes, req.TagNames, startDate)
+	task, err := s.service.CreateTask(ctx, req.Title, req.Notes, req.TagNames, startDate, req.ChecklistItems)
 	if err != nil {
 		return nil, grpcerrors.ToGRPCError(err, "failed to create task")
 	}

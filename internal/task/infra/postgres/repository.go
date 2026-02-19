@@ -13,19 +13,29 @@ import (
 
 // TaskRepository implements domain.Repository using PostgreSQL
 type TaskRepository struct {
+	pool    *pgxpool.Pool
 	queries *Queries
 }
 
 // NewTaskRepository creates a new task repository
 func NewTaskRepository(pool *pgxpool.Pool) *TaskRepository {
 	return &TaskRepository{
+		pool:    pool,
 		queries: New(pool),
 	}
 }
 
 // Create creates a new task
 func (r *TaskRepository) Create(ctx context.Context, task *domain.Task) error {
-	result, err := r.queries.CreateTask(ctx, CreateTaskParams{
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	txQueries := r.queries.WithTx(tx)
+
+	result, err := txQueries.CreateTask(ctx, CreateTaskParams{
 		Title:     task.Title,
 		Notes:     task.Notes,
 		OwnerID:   task.OwnerID,
@@ -59,7 +69,7 @@ func (r *TaskRepository) Create(ctx context.Context, task *domain.Task) error {
 			Bytes: tagID,
 			Valid: true,
 		}
-		err := r.queries.CreateTaskTag(ctx, CreateTaskTagParams{
+		err := txQueries.CreateTaskTag(ctx, CreateTaskTagParams{
 			TaskID: pgTaskID,
 			TagID:  pgTagID,
 		})
@@ -67,6 +77,30 @@ func (r *TaskRepository) Create(ctx context.Context, task *domain.Task) error {
 			return err
 		}
 	}
+
+	createdChecklist := make([]domain.ChecklistItem, 0, len(task.Checklist))
+	for _, item := range task.Checklist {
+		row, err := txQueries.CreateChecklistItemWithSortOrder(ctx, CreateChecklistItemWithSortOrderParams{
+			TaskID:    pgtype.UUID{Bytes: taskID, Valid: true},
+			OwnerID:   task.OwnerID,
+			Content:   item.Content,
+			SortOrder: item.SortOrder,
+		})
+		if err != nil {
+			return err
+		}
+
+		createdItem, err := checklistItemFromDB(row)
+		if err != nil {
+			return err
+		}
+		createdChecklist = append(createdChecklist, createdItem)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return err
+	}
+	task.Checklist = createdChecklist
 
 	return nil
 }

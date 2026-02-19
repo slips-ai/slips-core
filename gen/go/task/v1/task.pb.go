@@ -226,13 +226,14 @@ func (x *ChecklistItem) GetUpdatedAt() *timestamppb.Timestamp {
 
 // CreateTaskRequest is the request message for creating a task
 type CreateTaskRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Title         string                 `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
-	Notes         string                 `protobuf:"bytes,2,opt,name=notes,proto3" json:"notes,omitempty"`
-	TagNames      []string               `protobuf:"bytes,3,rep,name=tag_names,json=tagNames,proto3" json:"tag_names,omitempty"`
-	StartDate     *string                `protobuf:"bytes,5,opt,name=start_date,json=startDate,proto3,oneof" json:"start_date,omitempty"` // optional
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Title          string                 `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	Notes          string                 `protobuf:"bytes,2,opt,name=notes,proto3" json:"notes,omitempty"`
+	TagNames       []string               `protobuf:"bytes,3,rep,name=tag_names,json=tagNames,proto3" json:"tag_names,omitempty"`
+	StartDate      *string                `protobuf:"bytes,5,opt,name=start_date,json=startDate,proto3,oneof" json:"start_date,omitempty"` // optional
+	ChecklistItems []string               `protobuf:"bytes,6,rep,name=checklist_items,json=checklistItems,proto3" json:"checklist_items,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *CreateTaskRequest) Reset() {
@@ -291,6 +292,13 @@ func (x *CreateTaskRequest) GetStartDate() string {
 		return *x.StartDate
 	}
 	return ""
+}
+
+func (x *CreateTaskRequest) GetChecklistItems() []string {
+	if x != nil {
+		return x.ChecklistItems
+	}
+	return nil
 }
 
 // CreateTaskResponse is the response message for creating a task
@@ -1449,13 +1457,14 @@ const file_task_v1_task_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\x8f\x01\n" +
+	"updated_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\xb8\x01\n" +
 	"\x11CreateTaskRequest\x12\x14\n" +
 	"\x05title\x18\x01 \x01(\tR\x05title\x12\x14\n" +
 	"\x05notes\x18\x02 \x01(\tR\x05notes\x12\x1b\n" +
 	"\ttag_names\x18\x03 \x03(\tR\btagNames\x12\"\n" +
 	"\n" +
-	"start_date\x18\x05 \x01(\tH\x00R\tstartDate\x88\x01\x01B\r\n" +
+	"start_date\x18\x05 \x01(\tH\x00R\tstartDate\x88\x01\x01\x12'\n" +
+	"\x0fchecklist_items\x18\x06 \x03(\tR\x0echecklistItemsB\r\n" +
 	"\v_start_date\"7\n" +
 	"\x12CreateTaskResponse\x12!\n" +
 	"\x04task\x18\x01 \x01(\v2\r.task.v1.TaskR\x04task\" \n" +

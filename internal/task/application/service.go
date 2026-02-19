@@ -35,7 +35,7 @@ func NewService(repo domain.Repository, tagRepo tagdomain.Repository, logger *sl
 }
 
 // CreateTask creates a new task
-func (s *Service) CreateTask(ctx context.Context, title, notes string, tagNames []string, startDate *time.Time) (*domain.Task, error) {
+func (s *Service) CreateTask(ctx context.Context, title, notes string, tagNames []string, startDate *time.Time, checklistItems []string) (*domain.Task, error) {
 	ctx, span := tracer.Start(ctx, "CreateTask", trace.WithAttributes(
 		attribute.String("title", title),
 	))
@@ -62,6 +62,14 @@ func (s *Service) CreateTask(ctx context.Context, title, notes string, tagNames 
 	}
 
 	task := domain.NewTask(title, notes, userID, tagIDs)
+	task.Checklist = make([]domain.ChecklistItem, 0, len(checklistItems))
+	for i, content := range checklistItems {
+		task.Checklist = append(task.Checklist, domain.ChecklistItem{
+			Content:   content,
+			Completed: false,
+			SortOrder: int32(i),
+		})
+	}
 
 	// Set start date if provided; nil means inbox
 	task.SetStartDate(startDate)

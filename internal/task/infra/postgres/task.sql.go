@@ -80,6 +80,41 @@ func (q *Queries) ArchiveTask(ctx context.Context, arg ArchiveTaskParams) (Archi
 	return i, err
 }
 
+const createChecklistItemWithSortOrder = `-- name: CreateChecklistItemWithSortOrder :one
+INSERT INTO task_checklist_items (task_id, content, completed, sort_order)
+SELECT $1, $2, FALSE, $3
+FROM tasks
+WHERE id = $1 AND owner_id = $4
+RETURNING id, task_id, content, completed, sort_order, created_at, updated_at
+`
+
+type CreateChecklistItemWithSortOrderParams struct {
+	TaskID    pgtype.UUID `json:"task_id"`
+	Content   string      `json:"content"`
+	SortOrder int32       `json:"sort_order"`
+	OwnerID   string      `json:"owner_id"`
+}
+
+func (q *Queries) CreateChecklistItemWithSortOrder(ctx context.Context, arg CreateChecklistItemWithSortOrderParams) (TaskChecklistItem, error) {
+	row := q.db.QueryRow(ctx, createChecklistItemWithSortOrder,
+		arg.TaskID,
+		arg.Content,
+		arg.SortOrder,
+		arg.OwnerID,
+	)
+	var i TaskChecklistItem
+	err := row.Scan(
+		&i.ID,
+		&i.TaskID,
+		&i.Content,
+		&i.Completed,
+		&i.SortOrder,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const createTask = `-- name: CreateTask :one
 INSERT INTO tasks (title, notes, owner_id, start_date)
 VALUES ($1, $2, $3, $4)

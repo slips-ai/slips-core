@@ -13,6 +13,7 @@ import (
 type Querier interface {
 	AddChecklistItem(ctx context.Context, arg AddChecklistItemParams) (TaskChecklistItem, error)
 	ArchiveTask(ctx context.Context, arg ArchiveTaskParams) (ArchiveTaskRow, error)
+	CreateChecklistItemWithSortOrder(ctx context.Context, arg CreateChecklistItemWithSortOrderParams) (TaskChecklistItem, error)
 	CreateTask(ctx context.Context, arg CreateTaskParams) (CreateTaskRow, error)
 	CreateTaskTag(ctx context.Context, arg CreateTaskTagParams) error
 	DeleteChecklistItem(ctx context.Context, arg DeleteChecklistItemParams) (int64, error)
