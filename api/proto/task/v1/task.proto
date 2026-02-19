@@ -16,6 +16,18 @@ message Task {
   repeated string tag_ids = 6;
   optional google.protobuf.Timestamp archived_at = 7;
   optional string start_date = 9;       // format "YYYY-MM-DD", null means inbox
+  repeated ChecklistItem checklist_items = 10;
+}
+
+// ChecklistItem represents one checklist row under a task
+message ChecklistItem {
+  string id = 1;
+  string task_id = 2;
+  string content = 3;
+  bool completed = 4;
+  int32 sort_order = 5;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp updated_at = 7;
 }
 
 // CreateTaskRequest is the request message for creating a task
@@ -98,6 +110,59 @@ message ListTasksResponse {
   string next_page_token = 2;
 }
 
+// AddChecklistItemRequest creates a new checklist item for a task
+message AddChecklistItemRequest {
+  string task_id = 1;
+  string content = 2;
+}
+
+// AddChecklistItemResponse returns the created checklist item
+message AddChecklistItemResponse {
+  ChecklistItem item = 1;
+}
+
+// UpdateChecklistItemRequest updates checklist item content
+message UpdateChecklistItemRequest {
+  string item_id = 1;
+  string content = 2;
+}
+
+// UpdateChecklistItemResponse returns the updated checklist item
+message UpdateChecklistItemResponse {
+  ChecklistItem item = 1;
+}
+
+// SetChecklistItemCompletedRequest sets checklist item completion state
+message SetChecklistItemCompletedRequest {
+  string item_id = 1;
+  bool completed = 2;
+}
+
+// SetChecklistItemCompletedResponse returns the updated checklist item
+message SetChecklistItemCompletedResponse {
+  ChecklistItem item = 1;
+}
+
+// DeleteChecklistItemRequest deletes a checklist item
+message DeleteChecklistItemRequest {
+  string item_id = 1;
+}
+
+// DeleteChecklistItemResponse indicates successful deletion
+message DeleteChecklistItemResponse {}
+
+// ReorderChecklistItemsRequest reorders all checklist items for a task.
+// item_ids must contain all checklist item IDs for the task in final order.
+message ReorderChecklistItemsRequest {
+  string task_id = 1;
+  repeated string item_ids = 2;
+}
+
+// ReorderChecklistItemsResponse returns checklist items in updated order
+message ReorderChecklistItemsResponse {
+  repeated ChecklistItem items = 1;
+}
+
 // TaskService provides CRUD operations for tasks
 service TaskService {
   rpc CreateTask(CreateTaskRequest) returns (CreateTaskResponse);
@@ -107,4 +172,9 @@ service TaskService {
   rpc ListTasks(ListTasksRequest) returns (ListTasksResponse);
   rpc ArchiveTask(ArchiveTaskRequest) returns (ArchiveTaskResponse);
   rpc UnarchiveTask(UnarchiveTaskRequest) returns (UnarchiveTaskResponse);
+  rpc AddChecklistItem(AddChecklistItemRequest) returns (AddChecklistItemResponse);
+  rpc UpdateChecklistItem(UpdateChecklistItemRequest) returns (UpdateChecklistItemResponse);
+  rpc SetChecklistItemCompleted(SetChecklistItemCompletedRequest) returns (SetChecklistItemCompletedResponse);
+  rpc DeleteChecklistItem(DeleteChecklistItemRequest) returns (DeleteChecklistItemResponse);
+  rpc ReorderChecklistItems(ReorderChecklistItemsRequest) returns (ReorderChecklistItemsResponse);
 }

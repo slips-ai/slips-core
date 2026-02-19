@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/slips-ai/slips-core/internal/task/domain"
@@ -115,6 +116,11 @@ func (r *TaskRepository) Get(ctx context.Context, id uuid.UUID, ownerID string) 
 		UpdatedAt: result.UpdatedAt.Time,
 		StartDate: pgDateToTime(result.StartDate),
 	}
+	checklistItems, err := r.ListChecklistItems(ctx, id, ownerID)
+	if err != nil {
+		return nil, err
+	}
+	task.Checklist = checklistItems
 	if result.ArchivedAt.Valid {
 		task.ArchivedAt = &result.ArchivedAt.Time
 	}
@@ -362,6 +368,137 @@ func (r *TaskRepository) Unarchive(ctx context.Context, id uuid.UUID, ownerID st
 		task.ArchivedAt = &result.ArchivedAt.Time
 	}
 	return task, nil
+}
+
+// ListChecklistItems lists checklist items for a task.
+func (r *TaskRepository) ListChecklistItems(ctx context.Context, taskID uuid.UUID, ownerID string) ([]domain.ChecklistItem, error) {
+	pgTaskID := pgtype.UUID{Bytes: taskID, Valid: true}
+	rows, err := r.queries.ListChecklistItems(ctx, ListChecklistItemsParams{
+		TaskID:  pgTaskID,
+		OwnerID: ownerID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	items := make([]domain.ChecklistItem, len(rows))
+	for i := range rows {
+		item, err := checklistItemFromDB(rows[i])
+		if err != nil {
+			return nil, err
+		}
+		items[i] = item
+	}
+
+	return items, nil
+}
+
+// AddChecklistItem creates a new checklist item for a task.
+func (r *TaskRepository) AddChecklistItem(ctx context.Context, taskID uuid.UUID, ownerID, content string) (*domain.ChecklistItem, error) {
+	row, err := r.queries.AddChecklistItem(ctx, AddChecklistItemParams{
+		TaskID:  pgtype.UUID{Bytes: taskID, Valid: true},
+		OwnerID: ownerID,
+		Content: content,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	item, err := checklistItemFromDB(row)
+	if err != nil {
+		return nil, err
+	}
+
+	return &item, nil
+}
+
+// UpdateChecklistItemContent updates checklist item text.
+func (r *TaskRepository) UpdateChecklistItemContent(ctx context.Context, itemID uuid.UUID, ownerID, content string) (*domain.ChecklistItem, error) {
+	row, err := r.queries.UpdateChecklistItemContent(ctx, UpdateChecklistItemContentParams{
+		ItemID:  pgtype.UUID{Bytes: itemID, Valid: true},
+		Content: content,
+		OwnerID: ownerID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	item, err := checklistItemFromDB(row)
+	if err != nil {
+		return nil, err
+	}
+
+	return &item, nil
+}
+
+// SetChecklistItemCompleted sets checklist completion state.
+func (r *TaskRepository) SetChecklistItemCompleted(ctx context.Context, itemID uuid.UUID, ownerID string, completed bool) (*domain.ChecklistItem, error) {
+	row, err := r.queries.SetChecklistItemCompleted(ctx, SetChecklistItemCompletedParams{
+		ItemID:    pgtype.UUID{Bytes: itemID, Valid: true},
+		Completed: completed,
+		OwnerID:   ownerID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	item, err := checklistItemFromDB(row)
+	if err != nil {
+		return nil, err
+	}
+
+	return &item, nil
+}
+
+// DeleteChecklistItem deletes a checklist item.
+func (r *TaskRepository) DeleteChecklistItem(ctx context.Context, itemID uuid.UUID, ownerID string) error {
+	rowsAffected, err := r.queries.DeleteChecklistItem(ctx, DeleteChecklistItemParams{
+		ItemID:  pgtype.UUID{Bytes: itemID, Valid: true},
+		OwnerID: ownerID,
+	})
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return pgx.ErrNoRows
+	}
+
+	return nil
+}
+
+// ReorderChecklistItems updates checklist item sort order.
+func (r *TaskRepository) ReorderChecklistItems(ctx context.Context, taskID uuid.UUID, ownerID string, itemIDs []uuid.UUID) error {
+	pgIDs := make([]pgtype.UUID, len(itemIDs))
+	for i := range itemIDs {
+		pgIDs[i] = pgtype.UUID{Bytes: itemIDs[i], Valid: true}
+	}
+
+	return r.queries.ReorderChecklistItems(ctx, ReorderChecklistItemsParams{
+		TaskID:  pgtype.UUID{Bytes: taskID, Valid: true},
+		ItemIds: pgIDs,
+		OwnerID: ownerID,
+	})
+}
+
+func checklistItemFromDB(row TaskChecklistItem) (domain.ChecklistItem, error) {
+	id, err := uuid.FromBytes(row.ID.Bytes[:])
+	if err != nil {
+		return domain.ChecklistItem{}, err
+	}
+	taskID, err := uuid.FromBytes(row.TaskID.Bytes[:])
+	if err != nil {
+		return domain.ChecklistItem{}, err
+	}
+
+	return domain.ChecklistItem{
+		ID:        id,
+		TaskID:    taskID,
+		Content:   row.Content,
+		Completed: row.Completed,
+		SortOrder: row.SortOrder,
+		CreatedAt: row.CreatedAt.Time,
+		UpdatedAt: row.UpdatedAt.Time,
+	}, nil
 }
 
 // pgDateToTime converts a pgtype.Date to *time.Time.

@@ -11,6 +11,36 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const addChecklistItem = `-- name: AddChecklistItem :one
+INSERT INTO task_checklist_items (task_id, content, completed, sort_order)
+SELECT $1, $2, FALSE,
+       COALESCE((SELECT MAX(sort_order) + 1 FROM task_checklist_items WHERE task_id = $1), 0)
+FROM tasks
+WHERE id = $1 AND owner_id = $3
+RETURNING id, task_id, content, completed, sort_order, created_at, updated_at
+`
+
+type AddChecklistItemParams struct {
+	TaskID  pgtype.UUID `json:"task_id"`
+	Content string      `json:"content"`
+	OwnerID string      `json:"owner_id"`
+}
+
+func (q *Queries) AddChecklistItem(ctx context.Context, arg AddChecklistItemParams) (TaskChecklistItem, error) {
+	row := q.db.QueryRow(ctx, addChecklistItem, arg.TaskID, arg.Content, arg.OwnerID)
+	var i TaskChecklistItem
+	err := row.Scan(
+		&i.ID,
+		&i.TaskID,
+		&i.Content,
+		&i.Completed,
+		&i.SortOrder,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const archiveTask = `-- name: ArchiveTask :one
 UPDATE tasks
 SET archived_at = NOW(), updated_at = NOW()
@@ -111,6 +141,27 @@ func (q *Queries) CreateTaskTag(ctx context.Context, arg CreateTaskTagParams) er
 	return err
 }
 
+const deleteChecklistItem = `-- name: DeleteChecklistItem :execrows
+DELETE FROM task_checklist_items ci
+USING tasks t
+WHERE ci.id = $1
+  AND ci.task_id = t.id
+  AND t.owner_id = $2
+`
+
+type DeleteChecklistItemParams struct {
+	ItemID  pgtype.UUID `json:"item_id"`
+	OwnerID string      `json:"owner_id"`
+}
+
+func (q *Queries) DeleteChecklistItem(ctx context.Context, arg DeleteChecklistItemParams) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteChecklistItem, arg.ItemID, arg.OwnerID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const deleteTask = `-- name: DeleteTask :exec
 DELETE FROM tasks
 WHERE id = $1 AND owner_id = $2
@@ -200,6 +251,47 @@ func (q *Queries) GetTaskTagIDs(ctx context.Context, taskID pgtype.UUID) ([]pgty
 	return items, nil
 }
 
+const listChecklistItems = `-- name: ListChecklistItems :many
+SELECT ci.id, ci.task_id, ci.content, ci.completed, ci.sort_order, ci.created_at, ci.updated_at
+FROM task_checklist_items ci
+JOIN tasks t ON ci.task_id = t.id
+WHERE ci.task_id = $1 AND t.owner_id = $2
+ORDER BY ci.sort_order ASC, ci.created_at ASC
+`
+
+type ListChecklistItemsParams struct {
+	TaskID  pgtype.UUID `json:"task_id"`
+	OwnerID string      `json:"owner_id"`
+}
+
+func (q *Queries) ListChecklistItems(ctx context.Context, arg ListChecklistItemsParams) ([]TaskChecklistItem, error) {
+	rows, err := q.db.Query(ctx, listChecklistItems, arg.TaskID, arg.OwnerID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []TaskChecklistItem{}
+	for rows.Next() {
+		var i TaskChecklistItem
+		if err := rows.Scan(
+			&i.ID,
+			&i.TaskID,
+			&i.Content,
+			&i.Completed,
+			&i.SortOrder,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listTasks = `-- name: ListTasks :many
 SELECT DISTINCT t.id, t.title, t.notes, t.owner_id, t.archived_at, t.created_at, t.updated_at, t.start_date
 FROM tasks t
@@ -275,6 +367,58 @@ func (q *Queries) ListTasks(ctx context.Context, arg ListTasksParams) ([]ListTas
 	return items, nil
 }
 
+const reorderChecklistItems = `-- name: ReorderChecklistItems :exec
+UPDATE task_checklist_items ci
+SET sort_order = (ordered.ord - 1)::int,
+    updated_at = NOW()
+FROM unnest($2::uuid[]) WITH ORDINALITY AS ordered(id, ord)
+JOIN tasks t ON t.id = $1 AND t.owner_id = $3
+WHERE ci.task_id = $1
+  AND ci.id = ordered.id
+`
+
+type ReorderChecklistItemsParams struct {
+	TaskID  pgtype.UUID   `json:"task_id"`
+	ItemIds []pgtype.UUID `json:"item_ids"`
+	OwnerID string        `json:"owner_id"`
+}
+
+func (q *Queries) ReorderChecklistItems(ctx context.Context, arg ReorderChecklistItemsParams) error {
+	_, err := q.db.Exec(ctx, reorderChecklistItems, arg.TaskID, arg.ItemIds, arg.OwnerID)
+	return err
+}
+
+const setChecklistItemCompleted = `-- name: SetChecklistItemCompleted :one
+UPDATE task_checklist_items ci
+SET completed = $1, updated_at = NOW()
+FROM tasks t
+WHERE ci.id = $2
+  AND ci.task_id = t.id
+  AND t.owner_id = $3
+RETURNING ci.id, ci.task_id, ci.content, ci.completed, ci.sort_order, ci.created_at, ci.updated_at
+`
+
+type SetChecklistItemCompletedParams struct {
+	Completed bool        `json:"completed"`
+	ItemID    pgtype.UUID `json:"item_id"`
+	OwnerID   string      `json:"owner_id"`
+}
+
+func (q *Queries) SetChecklistItemCompleted(ctx context.Context, arg SetChecklistItemCompletedParams) (TaskChecklistItem, error) {
+	row := q.db.QueryRow(ctx, setChecklistItemCompleted, arg.Completed, arg.ItemID, arg.OwnerID)
+	var i TaskChecklistItem
+	err := row.Scan(
+		&i.ID,
+		&i.TaskID,
+		&i.Content,
+		&i.Completed,
+		&i.SortOrder,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const unarchiveTask = `-- name: UnarchiveTask :one
 UPDATE tasks
 SET archived_at = NULL, updated_at = NOW()
@@ -310,6 +454,37 @@ func (q *Queries) UnarchiveTask(ctx context.Context, arg UnarchiveTaskParams) (U
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.StartDate,
+	)
+	return i, err
+}
+
+const updateChecklistItemContent = `-- name: UpdateChecklistItemContent :one
+UPDATE task_checklist_items ci
+SET content = $1, updated_at = NOW()
+FROM tasks t
+WHERE ci.id = $2
+  AND ci.task_id = t.id
+  AND t.owner_id = $3
+RETURNING ci.id, ci.task_id, ci.content, ci.completed, ci.sort_order, ci.created_at, ci.updated_at
+`
+
+type UpdateChecklistItemContentParams struct {
+	Content string      `json:"content"`
+	ItemID  pgtype.UUID `json:"item_id"`
+	OwnerID string      `json:"owner_id"`
+}
+
+func (q *Queries) UpdateChecklistItemContent(ctx context.Context, arg UpdateChecklistItemContentParams) (TaskChecklistItem, error) {
+	row := q.db.QueryRow(ctx, updateChecklistItemContent, arg.Content, arg.ItemID, arg.OwnerID)
+	var i TaskChecklistItem
+	err := row.Scan(
+		&i.ID,
+		&i.TaskID,
+		&i.Content,
+		&i.Completed,
+		&i.SortOrder,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }

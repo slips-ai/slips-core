@@ -61,3 +61,52 @@ UPDATE tasks
 SET archived_at = NULL, updated_at = NOW()
 WHERE id = $1 AND owner_id = $2
 RETURNING id, title, notes, owner_id, archived_at, created_at, updated_at, start_date;
+
+-- name: ListChecklistItems :many
+SELECT ci.*
+FROM task_checklist_items ci
+JOIN tasks t ON ci.task_id = t.id
+WHERE ci.task_id = sqlc.arg(task_id) AND t.owner_id = sqlc.arg(owner_id)
+ORDER BY ci.sort_order ASC, ci.created_at ASC;
+
+-- name: AddChecklistItem :one
+INSERT INTO task_checklist_items (task_id, content, completed, sort_order)
+SELECT sqlc.arg(task_id), sqlc.arg(content), FALSE,
+       COALESCE((SELECT MAX(sort_order) + 1 FROM task_checklist_items WHERE task_id = sqlc.arg(task_id)), 0)
+FROM tasks
+WHERE id = sqlc.arg(task_id) AND owner_id = sqlc.arg(owner_id)
+RETURNING *;
+
+-- name: UpdateChecklistItemContent :one
+UPDATE task_checklist_items ci
+SET content = sqlc.arg(content), updated_at = NOW()
+FROM tasks t
+WHERE ci.id = sqlc.arg(item_id)
+  AND ci.task_id = t.id
+  AND t.owner_id = sqlc.arg(owner_id)
+RETURNING ci.*;
+
+-- name: SetChecklistItemCompleted :one
+UPDATE task_checklist_items ci
+SET completed = sqlc.arg(completed), updated_at = NOW()
+FROM tasks t
+WHERE ci.id = sqlc.arg(item_id)
+  AND ci.task_id = t.id
+  AND t.owner_id = sqlc.arg(owner_id)
+RETURNING ci.*;
+
+-- name: DeleteChecklistItem :execrows
+DELETE FROM task_checklist_items ci
+USING tasks t
+WHERE ci.id = sqlc.arg(item_id)
+  AND ci.task_id = t.id
+  AND t.owner_id = sqlc.arg(owner_id);
+
+-- name: ReorderChecklistItems :exec
+UPDATE task_checklist_items ci
+SET sort_order = (ordered.ord - 1)::int,
+    updated_at = NOW()
+FROM unnest(sqlc.arg(item_ids)::uuid[]) WITH ORDINALITY AS ordered(id, ord)
+JOIN tasks t ON t.id = sqlc.arg(task_id) AND t.owner_id = sqlc.arg(owner_id)
+WHERE ci.task_id = sqlc.arg(task_id)
+  AND ci.id = ordered.id;

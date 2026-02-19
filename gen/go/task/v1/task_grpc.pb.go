@@ -19,13 +19,18 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	TaskService_CreateTask_FullMethodName    = "/task.v1.TaskService/CreateTask"
-	TaskService_GetTask_FullMethodName       = "/task.v1.TaskService/GetTask"
-	TaskService_UpdateTask_FullMethodName    = "/task.v1.TaskService/UpdateTask"
-	TaskService_DeleteTask_FullMethodName    = "/task.v1.TaskService/DeleteTask"
-	TaskService_ListTasks_FullMethodName     = "/task.v1.TaskService/ListTasks"
-	TaskService_ArchiveTask_FullMethodName   = "/task.v1.TaskService/ArchiveTask"
-	TaskService_UnarchiveTask_FullMethodName = "/task.v1.TaskService/UnarchiveTask"
+	TaskService_CreateTask_FullMethodName                = "/task.v1.TaskService/CreateTask"
+	TaskService_GetTask_FullMethodName                   = "/task.v1.TaskService/GetTask"
+	TaskService_UpdateTask_FullMethodName                = "/task.v1.TaskService/UpdateTask"
+	TaskService_DeleteTask_FullMethodName                = "/task.v1.TaskService/DeleteTask"
+	TaskService_ListTasks_FullMethodName                 = "/task.v1.TaskService/ListTasks"
+	TaskService_ArchiveTask_FullMethodName               = "/task.v1.TaskService/ArchiveTask"
+	TaskService_UnarchiveTask_FullMethodName             = "/task.v1.TaskService/UnarchiveTask"
+	TaskService_AddChecklistItem_FullMethodName          = "/task.v1.TaskService/AddChecklistItem"
+	TaskService_UpdateChecklistItem_FullMethodName       = "/task.v1.TaskService/UpdateChecklistItem"
+	TaskService_SetChecklistItemCompleted_FullMethodName = "/task.v1.TaskService/SetChecklistItemCompleted"
+	TaskService_DeleteChecklistItem_FullMethodName       = "/task.v1.TaskService/DeleteChecklistItem"
+	TaskService_ReorderChecklistItems_FullMethodName     = "/task.v1.TaskService/ReorderChecklistItems"
 )
 
 // TaskServiceClient is the client API for TaskService service.
@@ -41,6 +46,11 @@ type TaskServiceClient interface {
 	ListTasks(ctx context.Context, in *ListTasksRequest, opts ...grpc.CallOption) (*ListTasksResponse, error)
 	ArchiveTask(ctx context.Context, in *ArchiveTaskRequest, opts ...grpc.CallOption) (*ArchiveTaskResponse, error)
 	UnarchiveTask(ctx context.Context, in *UnarchiveTaskRequest, opts ...grpc.CallOption) (*UnarchiveTaskResponse, error)
+	AddChecklistItem(ctx context.Context, in *AddChecklistItemRequest, opts ...grpc.CallOption) (*AddChecklistItemResponse, error)
+	UpdateChecklistItem(ctx context.Context, in *UpdateChecklistItemRequest, opts ...grpc.CallOption) (*UpdateChecklistItemResponse, error)
+	SetChecklistItemCompleted(ctx context.Context, in *SetChecklistItemCompletedRequest, opts ...grpc.CallOption) (*SetChecklistItemCompletedResponse, error)
+	DeleteChecklistItem(ctx context.Context, in *DeleteChecklistItemRequest, opts ...grpc.CallOption) (*DeleteChecklistItemResponse, error)
+	ReorderChecklistItems(ctx context.Context, in *ReorderChecklistItemsRequest, opts ...grpc.CallOption) (*ReorderChecklistItemsResponse, error)
 }
 
 type taskServiceClient struct {
@@ -121,6 +131,56 @@ func (c *taskServiceClient) UnarchiveTask(ctx context.Context, in *UnarchiveTask
 	return out, nil
 }
 
+func (c *taskServiceClient) AddChecklistItem(ctx context.Context, in *AddChecklistItemRequest, opts ...grpc.CallOption) (*AddChecklistItemResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AddChecklistItemResponse)
+	err := c.cc.Invoke(ctx, TaskService_AddChecklistItem_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *taskServiceClient) UpdateChecklistItem(ctx context.Context, in *UpdateChecklistItemRequest, opts ...grpc.CallOption) (*UpdateChecklistItemResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateChecklistItemResponse)
+	err := c.cc.Invoke(ctx, TaskService_UpdateChecklistItem_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *taskServiceClient) SetChecklistItemCompleted(ctx context.Context, in *SetChecklistItemCompletedRequest, opts ...grpc.CallOption) (*SetChecklistItemCompletedResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SetChecklistItemCompletedResponse)
+	err := c.cc.Invoke(ctx, TaskService_SetChecklistItemCompleted_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *taskServiceClient) DeleteChecklistItem(ctx context.Context, in *DeleteChecklistItemRequest, opts ...grpc.CallOption) (*DeleteChecklistItemResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteChecklistItemResponse)
+	err := c.cc.Invoke(ctx, TaskService_DeleteChecklistItem_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *taskServiceClient) ReorderChecklistItems(ctx context.Context, in *ReorderChecklistItemsRequest, opts ...grpc.CallOption) (*ReorderChecklistItemsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ReorderChecklistItemsResponse)
+	err := c.cc.Invoke(ctx, TaskService_ReorderChecklistItems_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // TaskServiceServer is the server API for TaskService service.
 // All implementations must embed UnimplementedTaskServiceServer
 // for forward compatibility.
@@ -134,6 +194,11 @@ type TaskServiceServer interface {
 	ListTasks(context.Context, *ListTasksRequest) (*ListTasksResponse, error)
 	ArchiveTask(context.Context, *ArchiveTaskRequest) (*ArchiveTaskResponse, error)
 	UnarchiveTask(context.Context, *UnarchiveTaskRequest) (*UnarchiveTaskResponse, error)
+	AddChecklistItem(context.Context, *AddChecklistItemRequest) (*AddChecklistItemResponse, error)
+	UpdateChecklistItem(context.Context, *UpdateChecklistItemRequest) (*UpdateChecklistItemResponse, error)
+	SetChecklistItemCompleted(context.Context, *SetChecklistItemCompletedRequest) (*SetChecklistItemCompletedResponse, error)
+	DeleteChecklistItem(context.Context, *DeleteChecklistItemRequest) (*DeleteChecklistItemResponse, error)
+	ReorderChecklistItems(context.Context, *ReorderChecklistItemsRequest) (*ReorderChecklistItemsResponse, error)
 	mustEmbedUnimplementedTaskServiceServer()
 }
 
@@ -164,6 +229,21 @@ func (UnimplementedTaskServiceServer) ArchiveTask(context.Context, *ArchiveTaskR
 }
 func (UnimplementedTaskServiceServer) UnarchiveTask(context.Context, *UnarchiveTaskRequest) (*UnarchiveTaskResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UnarchiveTask not implemented")
+}
+func (UnimplementedTaskServiceServer) AddChecklistItem(context.Context, *AddChecklistItemRequest) (*AddChecklistItemResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddChecklistItem not implemented")
+}
+func (UnimplementedTaskServiceServer) UpdateChecklistItem(context.Context, *UpdateChecklistItemRequest) (*UpdateChecklistItemResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateChecklistItem not implemented")
+}
+func (UnimplementedTaskServiceServer) SetChecklistItemCompleted(context.Context, *SetChecklistItemCompletedRequest) (*SetChecklistItemCompletedResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetChecklistItemCompleted not implemented")
+}
+func (UnimplementedTaskServiceServer) DeleteChecklistItem(context.Context, *DeleteChecklistItemRequest) (*DeleteChecklistItemResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteChecklistItem not implemented")
+}
+func (UnimplementedTaskServiceServer) ReorderChecklistItems(context.Context, *ReorderChecklistItemsRequest) (*ReorderChecklistItemsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ReorderChecklistItems not implemented")
 }
 func (UnimplementedTaskServiceServer) mustEmbedUnimplementedTaskServiceServer() {}
 func (UnimplementedTaskServiceServer) testEmbeddedByValue()                     {}
@@ -312,6 +392,96 @@ func _TaskService_UnarchiveTask_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _TaskService_AddChecklistItem_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddChecklistItemRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TaskServiceServer).AddChecklistItem(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: TaskService_AddChecklistItem_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TaskServiceServer).AddChecklistItem(ctx, req.(*AddChecklistItemRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TaskService_UpdateChecklistItem_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateChecklistItemRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TaskServiceServer).UpdateChecklistItem(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: TaskService_UpdateChecklistItem_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TaskServiceServer).UpdateChecklistItem(ctx, req.(*UpdateChecklistItemRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TaskService_SetChecklistItemCompleted_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetChecklistItemCompletedRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TaskServiceServer).SetChecklistItemCompleted(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: TaskService_SetChecklistItemCompleted_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TaskServiceServer).SetChecklistItemCompleted(ctx, req.(*SetChecklistItemCompletedRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TaskService_DeleteChecklistItem_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteChecklistItemRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TaskServiceServer).DeleteChecklistItem(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: TaskService_DeleteChecklistItem_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TaskServiceServer).DeleteChecklistItem(ctx, req.(*DeleteChecklistItemRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TaskService_ReorderChecklistItems_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReorderChecklistItemsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TaskServiceServer).ReorderChecklistItems(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: TaskService_ReorderChecklistItems_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TaskServiceServer).ReorderChecklistItems(ctx, req.(*ReorderChecklistItemsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // TaskService_ServiceDesc is the grpc.ServiceDesc for TaskService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -346,6 +516,26 @@ var TaskService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UnarchiveTask",
 			Handler:    _TaskService_UnarchiveTask_Handler,
+		},
+		{
+			MethodName: "AddChecklistItem",
+			Handler:    _TaskService_AddChecklistItem_Handler,
+		},
+		{
+			MethodName: "UpdateChecklistItem",
+			Handler:    _TaskService_UpdateChecklistItem_Handler,
+		},
+		{
+			MethodName: "SetChecklistItemCompleted",
+			Handler:    _TaskService_SetChecklistItemCompleted_Handler,
+		},
+		{
+			MethodName: "DeleteChecklistItem",
+			Handler:    _TaskService_DeleteChecklistItem_Handler,
+		},
+		{
+			MethodName: "ReorderChecklistItems",
+			Handler:    _TaskService_ReorderChecklistItems_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

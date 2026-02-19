@@ -17,6 +17,8 @@ const (
 	MaxNotesLength = 50000
 	// MaxTagNameLength is the maximum allowed length for tag names
 	MaxTagNameLength = 100
+	// MaxChecklistItemLength is the maximum allowed length for checklist item text
+	MaxChecklistItemLength = 1000
 )
 
 // ToGRPCError converts an error to an appropriate gRPC status error

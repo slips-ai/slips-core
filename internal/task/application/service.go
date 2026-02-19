@@ -3,6 +3,8 @@ package application
 import (
 	"context"
 	"log/slog"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -271,4 +273,158 @@ func (s *Service) UnarchiveTask(ctx context.Context, id uuid.UUID) (*domain.Task
 
 	s.logger.InfoContext(ctx, "task unarchived", "id", id)
 	return task, nil
+}
+
+// AddChecklistItem adds a checklist item to a task.
+func (s *Service) AddChecklistItem(ctx context.Context, taskID uuid.UUID, content string) (*domain.ChecklistItem, error) {
+	ctx, span := tracer.Start(ctx, "AddChecklistItem", trace.WithAttributes(
+		attribute.String("task_id", taskID.String()),
+	))
+	defer span.End()
+
+	userID, err := auth.GetUserID(ctx)
+	if err != nil {
+		s.logger.ErrorContext(ctx, "failed to get user ID from context", "error", err)
+		span.RecordError(err)
+		return nil, err
+	}
+
+	item, err := s.repo.AddChecklistItem(ctx, taskID, userID, content)
+	if err != nil {
+		s.logger.ErrorContext(ctx, "failed to add checklist item", "task_id", taskID, "error", err)
+		span.RecordError(err)
+		return nil, err
+	}
+
+	return item, nil
+}
+
+// UpdateChecklistItemContent updates checklist item text.
+func (s *Service) UpdateChecklistItemContent(ctx context.Context, itemID uuid.UUID, content string) (*domain.ChecklistItem, error) {
+	ctx, span := tracer.Start(ctx, "UpdateChecklistItemContent", trace.WithAttributes(
+		attribute.String("item_id", itemID.String()),
+	))
+	defer span.End()
+
+	userID, err := auth.GetUserID(ctx)
+	if err != nil {
+		s.logger.ErrorContext(ctx, "failed to get user ID from context", "error", err)
+		span.RecordError(err)
+		return nil, err
+	}
+
+	item, err := s.repo.UpdateChecklistItemContent(ctx, itemID, userID, content)
+	if err != nil {
+		s.logger.ErrorContext(ctx, "failed to update checklist item", "item_id", itemID, "error", err)
+		span.RecordError(err)
+		return nil, err
+	}
+
+	return item, nil
+}
+
+// SetChecklistItemCompleted sets checklist item completion state.
+func (s *Service) SetChecklistItemCompleted(ctx context.Context, itemID uuid.UUID, completed bool) (*domain.ChecklistItem, error) {
+	ctx, span := tracer.Start(ctx, "SetChecklistItemCompleted", trace.WithAttributes(
+		attribute.String("item_id", itemID.String()),
+		attribute.Bool("completed", completed),
+	))
+	defer span.End()
+
+	userID, err := auth.GetUserID(ctx)
+	if err != nil {
+		s.logger.ErrorContext(ctx, "failed to get user ID from context", "error", err)
+		span.RecordError(err)
+		return nil, err
+	}
+
+	item, err := s.repo.SetChecklistItemCompleted(ctx, itemID, userID, completed)
+	if err != nil {
+		s.logger.ErrorContext(ctx, "failed to set checklist item completion", "item_id", itemID, "error", err)
+		span.RecordError(err)
+		return nil, err
+	}
+
+	return item, nil
+}
+
+// DeleteChecklistItem deletes a checklist item.
+func (s *Service) DeleteChecklistItem(ctx context.Context, itemID uuid.UUID) error {
+	ctx, span := tracer.Start(ctx, "DeleteChecklistItem", trace.WithAttributes(
+		attribute.String("item_id", itemID.String()),
+	))
+	defer span.End()
+
+	userID, err := auth.GetUserID(ctx)
+	if err != nil {
+		s.logger.ErrorContext(ctx, "failed to get user ID from context", "error", err)
+		span.RecordError(err)
+		return err
+	}
+
+	if err := s.repo.DeleteChecklistItem(ctx, itemID, userID); err != nil {
+		s.logger.ErrorContext(ctx, "failed to delete checklist item", "item_id", itemID, "error", err)
+		span.RecordError(err)
+		return err
+	}
+
+	return nil
+}
+
+// ReorderChecklistItems sets a new checklist order for all task items.
+func (s *Service) ReorderChecklistItems(ctx context.Context, taskID uuid.UUID, itemIDs []uuid.UUID) ([]domain.ChecklistItem, error) {
+	ctx, span := tracer.Start(ctx, "ReorderChecklistItems", trace.WithAttributes(
+		attribute.String("task_id", taskID.String()),
+		attribute.Int("item_count", len(itemIDs)),
+	))
+	defer span.End()
+
+	userID, err := auth.GetUserID(ctx)
+	if err != nil {
+		s.logger.ErrorContext(ctx, "failed to get user ID from context", "error", err)
+		span.RecordError(err)
+		return nil, err
+	}
+
+	existingItems, err := s.repo.ListChecklistItems(ctx, taskID, userID)
+	if err != nil {
+		s.logger.ErrorContext(ctx, "failed to list checklist items", "task_id", taskID, "error", err)
+		span.RecordError(err)
+		return nil, err
+	}
+
+	if len(existingItems) != len(itemIDs) {
+		return nil, domain.ErrInvalidChecklistOrder
+	}
+
+	existingIDs := make([]uuid.UUID, len(existingItems))
+	for i := range existingItems {
+		existingIDs[i] = existingItems[i].ID
+	}
+
+	slices.SortFunc(existingIDs, func(a, b uuid.UUID) int {
+		return strings.Compare(a.String(), b.String())
+	})
+	sortedRequested := append([]uuid.UUID(nil), itemIDs...)
+	slices.SortFunc(sortedRequested, func(a, b uuid.UUID) int {
+		return strings.Compare(a.String(), b.String())
+	})
+	if !slices.Equal(existingIDs, sortedRequested) {
+		return nil, domain.ErrInvalidChecklistOrder
+	}
+
+	if err := s.repo.ReorderChecklistItems(ctx, taskID, userID, itemIDs); err != nil {
+		s.logger.ErrorContext(ctx, "failed to reorder checklist items", "task_id", taskID, "error", err)
+		span.RecordError(err)
+		return nil, err
+	}
+
+	items, err := s.repo.ListChecklistItems(ctx, taskID, userID)
+	if err != nil {
+		s.logger.ErrorContext(ctx, "failed to list reordered checklist items", "task_id", taskID, "error", err)
+		span.RecordError(err)
+		return nil, err
+	}
+
+	return items, nil
 }

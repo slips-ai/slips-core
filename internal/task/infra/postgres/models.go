@@ -38,6 +38,16 @@ type Task struct {
 	StartDate  pgtype.Date        `json:"start_date"`
 }
 
+type TaskChecklistItem struct {
+	ID        pgtype.UUID        `json:"id"`
+	TaskID    pgtype.UUID        `json:"task_id"`
+	Content   string             `json:"content"`
+	Completed bool               `json:"completed"`
+	SortOrder int32              `json:"sort_order"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
+
 type TaskTag struct {
 	TaskID    pgtype.UUID        `json:"task_id"`
 	TagID     pgtype.UUID        `json:"tag_id"`

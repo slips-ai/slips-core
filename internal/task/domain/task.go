@@ -12,11 +12,23 @@ type Task struct {
 	Title      string
 	Notes      string
 	TagIDs     []uuid.UUID
+	Checklist  []ChecklistItem
 	OwnerID    string
 	ArchivedAt *time.Time
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
 	StartDate  *time.Time
+}
+
+// ChecklistItem represents a single checklist row for a task.
+type ChecklistItem struct {
+	ID        uuid.UUID
+	TaskID    uuid.UUID
+	Content   string
+	Completed bool
+	SortOrder int32
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 // NewTask creates a new task

@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -189,13 +190,19 @@ func taskToProto(task *domain.Task) *taskv1.Task {
 		tagIDs[i] = tagID.String()
 	}
 
+	checklistItems := make([]*taskv1.ChecklistItem, len(task.Checklist))
+	for i := range task.Checklist {
+		checklistItems[i] = checklistItemToProto(&task.Checklist[i])
+	}
+
 	protoTask := &taskv1.Task{
-		Id:        task.ID.String(),
-		Title:     task.Title,
-		Notes:     task.Notes,
-		CreatedAt: timestamppb.New(task.CreatedAt),
-		UpdatedAt: timestamppb.New(task.UpdatedAt),
-		TagIds:    tagIDs,
+		Id:             task.ID.String(),
+		Title:          task.Title,
+		Notes:          task.Notes,
+		CreatedAt:      timestamppb.New(task.CreatedAt),
+		UpdatedAt:      timestamppb.New(task.UpdatedAt),
+		TagIds:         tagIDs,
+		ChecklistItems: checklistItems,
 	}
 
 	if task.ArchivedAt != nil {
@@ -208,6 +215,18 @@ func taskToProto(task *domain.Task) *taskv1.Task {
 	}
 
 	return protoTask
+}
+
+func checklistItemToProto(item *domain.ChecklistItem) *taskv1.ChecklistItem {
+	return &taskv1.ChecklistItem{
+		Id:        item.ID.String(),
+		TaskId:    item.TaskID.String(),
+		Content:   item.Content,
+		Completed: item.Completed,
+		SortOrder: item.SortOrder,
+		CreatedAt: timestamppb.New(item.CreatedAt),
+		UpdatedAt: timestamppb.New(item.UpdatedAt),
+	}
 }
 
 // parseStartDateForCreate parses and validates optional start_date for create requests.
@@ -272,4 +291,110 @@ func (s *TaskServer) UnarchiveTask(ctx context.Context, req *taskv1.UnarchiveTas
 	return &taskv1.UnarchiveTaskResponse{
 		Task: taskToProto(task),
 	}, nil
+}
+
+// AddChecklistItem creates a checklist item for a task.
+func (s *TaskServer) AddChecklistItem(ctx context.Context, req *taskv1.AddChecklistItemRequest) (*taskv1.AddChecklistItemResponse, error) {
+	taskID, err := uuid.Parse(req.TaskId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid task ID format")
+	}
+	if err := grpcerrors.ValidateNotEmpty(req.Content, "content"); err != nil {
+		return nil, err
+	}
+	if err := grpcerrors.ValidateLength(req.Content, "content", grpcerrors.MaxChecklistItemLength); err != nil {
+		return nil, err
+	}
+
+	item, err := s.service.AddChecklistItem(ctx, taskID, req.Content)
+	if err != nil {
+		return nil, grpcerrors.ToGRPCError(err, "failed to add checklist item")
+	}
+
+	return &taskv1.AddChecklistItemResponse{Item: checklistItemToProto(item)}, nil
+}
+
+// UpdateChecklistItem updates checklist item content.
+func (s *TaskServer) UpdateChecklistItem(ctx context.Context, req *taskv1.UpdateChecklistItemRequest) (*taskv1.UpdateChecklistItemResponse, error) {
+	itemID, err := uuid.Parse(req.ItemId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid checklist item ID format")
+	}
+	if err := grpcerrors.ValidateNotEmpty(req.Content, "content"); err != nil {
+		return nil, err
+	}
+	if err := grpcerrors.ValidateLength(req.Content, "content", grpcerrors.MaxChecklistItemLength); err != nil {
+		return nil, err
+	}
+
+	item, err := s.service.UpdateChecklistItemContent(ctx, itemID, req.Content)
+	if err != nil {
+		return nil, grpcerrors.ToGRPCError(err, "failed to update checklist item")
+	}
+
+	return &taskv1.UpdateChecklistItemResponse{Item: checklistItemToProto(item)}, nil
+}
+
+// SetChecklistItemCompleted sets checklist completion state.
+func (s *TaskServer) SetChecklistItemCompleted(ctx context.Context, req *taskv1.SetChecklistItemCompletedRequest) (*taskv1.SetChecklistItemCompletedResponse, error) {
+	itemID, err := uuid.Parse(req.ItemId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid checklist item ID format")
+	}
+
+	item, err := s.service.SetChecklistItemCompleted(ctx, itemID, req.Completed)
+	if err != nil {
+		return nil, grpcerrors.ToGRPCError(err, "failed to set checklist item completion")
+	}
+
+	return &taskv1.SetChecklistItemCompletedResponse{Item: checklistItemToProto(item)}, nil
+}
+
+// DeleteChecklistItem deletes checklist item.
+func (s *TaskServer) DeleteChecklistItem(ctx context.Context, req *taskv1.DeleteChecklistItemRequest) (*taskv1.DeleteChecklistItemResponse, error) {
+	itemID, err := uuid.Parse(req.ItemId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid checklist item ID format")
+	}
+
+	if err := s.service.DeleteChecklistItem(ctx, itemID); err != nil {
+		return nil, grpcerrors.ToGRPCError(err, "failed to delete checklist item")
+	}
+
+	return &taskv1.DeleteChecklistItemResponse{}, nil
+}
+
+// ReorderChecklistItems updates checklist ordering for a task.
+func (s *TaskServer) ReorderChecklistItems(ctx context.Context, req *taskv1.ReorderChecklistItemsRequest) (*taskv1.ReorderChecklistItemsResponse, error) {
+	taskID, err := uuid.Parse(req.TaskId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid task ID format")
+	}
+	if len(req.ItemIds) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "item_ids cannot be empty")
+	}
+
+	itemIDs := make([]uuid.UUID, len(req.ItemIds))
+	for i, itemIDStr := range req.ItemIds {
+		itemID, parseErr := uuid.Parse(itemIDStr)
+		if parseErr != nil {
+			return nil, status.Error(codes.InvalidArgument, "invalid checklist item ID format")
+		}
+		itemIDs[i] = itemID
+	}
+
+	items, err := s.service.ReorderChecklistItems(ctx, taskID, itemIDs)
+	if err != nil {
+		if errors.Is(err, domain.ErrInvalidChecklistOrder) {
+			return nil, status.Error(codes.InvalidArgument, "item_ids must include all checklist item IDs exactly once")
+		}
+		return nil, grpcerrors.ToGRPCError(err, "failed to reorder checklist items")
+	}
+
+	protoItems := make([]*taskv1.ChecklistItem, len(items))
+	for i := range items {
+		protoItems[i] = checklistItemToProto(&items[i])
+	}
+
+	return &taskv1.ReorderChecklistItemsResponse{Items: protoItems}, nil
 }

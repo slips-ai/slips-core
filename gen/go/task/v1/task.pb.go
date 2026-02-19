@@ -24,17 +24,18 @@ const (
 
 // Task represents a task entity
 type Task struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Title         string                 `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
-	Notes         string                 `protobuf:"bytes,3,opt,name=notes,proto3" json:"notes,omitempty"`
-	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	TagIds        []string               `protobuf:"bytes,6,rep,name=tag_ids,json=tagIds,proto3" json:"tag_ids,omitempty"`
-	ArchivedAt    *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=archived_at,json=archivedAt,proto3,oneof" json:"archived_at,omitempty"`
-	StartDate     *string                `protobuf:"bytes,9,opt,name=start_date,json=startDate,proto3,oneof" json:"start_date,omitempty"` // format "YYYY-MM-DD", null means inbox
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Id             string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Title          string                 `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
+	Notes          string                 `protobuf:"bytes,3,opt,name=notes,proto3" json:"notes,omitempty"`
+	CreatedAt      *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt      *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	TagIds         []string               `protobuf:"bytes,6,rep,name=tag_ids,json=tagIds,proto3" json:"tag_ids,omitempty"`
+	ArchivedAt     *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=archived_at,json=archivedAt,proto3,oneof" json:"archived_at,omitempty"`
+	StartDate      *string                `protobuf:"bytes,9,opt,name=start_date,json=startDate,proto3,oneof" json:"start_date,omitempty"` // format "YYYY-MM-DD", null means inbox
+	ChecklistItems []*ChecklistItem       `protobuf:"bytes,10,rep,name=checklist_items,json=checklistItems,proto3" json:"checklist_items,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *Task) Reset() {
@@ -123,6 +124,106 @@ func (x *Task) GetStartDate() string {
 	return ""
 }
 
+func (x *Task) GetChecklistItems() []*ChecklistItem {
+	if x != nil {
+		return x.ChecklistItems
+	}
+	return nil
+}
+
+// ChecklistItem represents one checklist row under a task
+type ChecklistItem struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	TaskId        string                 `protobuf:"bytes,2,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
+	Content       string                 `protobuf:"bytes,3,opt,name=content,proto3" json:"content,omitempty"`
+	Completed     bool                   `protobuf:"varint,4,opt,name=completed,proto3" json:"completed,omitempty"`
+	SortOrder     int32                  `protobuf:"varint,5,opt,name=sort_order,json=sortOrder,proto3" json:"sort_order,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ChecklistItem) Reset() {
+	*x = ChecklistItem{}
+	mi := &file_task_v1_task_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ChecklistItem) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ChecklistItem) ProtoMessage() {}
+
+func (x *ChecklistItem) ProtoReflect() protoreflect.Message {
+	mi := &file_task_v1_task_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ChecklistItem.ProtoReflect.Descriptor instead.
+func (*ChecklistItem) Descriptor() ([]byte, []int) {
+	return file_task_v1_task_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *ChecklistItem) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *ChecklistItem) GetTaskId() string {
+	if x != nil {
+		return x.TaskId
+	}
+	return ""
+}
+
+func (x *ChecklistItem) GetContent() string {
+	if x != nil {
+		return x.Content
+	}
+	return ""
+}
+
+func (x *ChecklistItem) GetCompleted() bool {
+	if x != nil {
+		return x.Completed
+	}
+	return false
+}
+
+func (x *ChecklistItem) GetSortOrder() int32 {
+	if x != nil {
+		return x.SortOrder
+	}
+	return 0
+}
+
+func (x *ChecklistItem) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+func (x *ChecklistItem) GetUpdatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return nil
+}
+
 // CreateTaskRequest is the request message for creating a task
 type CreateTaskRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -136,7 +237,7 @@ type CreateTaskRequest struct {
 
 func (x *CreateTaskRequest) Reset() {
 	*x = CreateTaskRequest{}
-	mi := &file_task_v1_task_proto_msgTypes[1]
+	mi := &file_task_v1_task_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -148,7 +249,7 @@ func (x *CreateTaskRequest) String() string {
 func (*CreateTaskRequest) ProtoMessage() {}
 
 func (x *CreateTaskRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_task_v1_task_proto_msgTypes[1]
+	mi := &file_task_v1_task_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -161,7 +262,7 @@ func (x *CreateTaskRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateTaskRequest.ProtoReflect.Descriptor instead.
 func (*CreateTaskRequest) Descriptor() ([]byte, []int) {
-	return file_task_v1_task_proto_rawDescGZIP(), []int{1}
+	return file_task_v1_task_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *CreateTaskRequest) GetTitle() string {
@@ -202,7 +303,7 @@ type CreateTaskResponse struct {
 
 func (x *CreateTaskResponse) Reset() {
 	*x = CreateTaskResponse{}
-	mi := &file_task_v1_task_proto_msgTypes[2]
+	mi := &file_task_v1_task_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -214,7 +315,7 @@ func (x *CreateTaskResponse) String() string {
 func (*CreateTaskResponse) ProtoMessage() {}
 
 func (x *CreateTaskResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_task_v1_task_proto_msgTypes[2]
+	mi := &file_task_v1_task_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -227,7 +328,7 @@ func (x *CreateTaskResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateTaskResponse.ProtoReflect.Descriptor instead.
 func (*CreateTaskResponse) Descriptor() ([]byte, []int) {
-	return file_task_v1_task_proto_rawDescGZIP(), []int{2}
+	return file_task_v1_task_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *CreateTaskResponse) GetTask() *Task {
@@ -247,7 +348,7 @@ type GetTaskRequest struct {
 
 func (x *GetTaskRequest) Reset() {
 	*x = GetTaskRequest{}
-	mi := &file_task_v1_task_proto_msgTypes[3]
+	mi := &file_task_v1_task_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -259,7 +360,7 @@ func (x *GetTaskRequest) String() string {
 func (*GetTaskRequest) ProtoMessage() {}
 
 func (x *GetTaskRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_task_v1_task_proto_msgTypes[3]
+	mi := &file_task_v1_task_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -272,7 +373,7 @@ func (x *GetTaskRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetTaskRequest.ProtoReflect.Descriptor instead.
 func (*GetTaskRequest) Descriptor() ([]byte, []int) {
-	return file_task_v1_task_proto_rawDescGZIP(), []int{3}
+	return file_task_v1_task_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *GetTaskRequest) GetId() string {
@@ -292,7 +393,7 @@ type GetTaskResponse struct {
 
 func (x *GetTaskResponse) Reset() {
 	*x = GetTaskResponse{}
-	mi := &file_task_v1_task_proto_msgTypes[4]
+	mi := &file_task_v1_task_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -304,7 +405,7 @@ func (x *GetTaskResponse) String() string {
 func (*GetTaskResponse) ProtoMessage() {}
 
 func (x *GetTaskResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_task_v1_task_proto_msgTypes[4]
+	mi := &file_task_v1_task_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -317,7 +418,7 @@ func (x *GetTaskResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetTaskResponse.ProtoReflect.Descriptor instead.
 func (*GetTaskResponse) Descriptor() ([]byte, []int) {
-	return file_task_v1_task_proto_rawDescGZIP(), []int{4}
+	return file_task_v1_task_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *GetTaskResponse) GetTask() *Task {
@@ -341,7 +442,7 @@ type UpdateTaskRequest struct {
 
 func (x *UpdateTaskRequest) Reset() {
 	*x = UpdateTaskRequest{}
-	mi := &file_task_v1_task_proto_msgTypes[5]
+	mi := &file_task_v1_task_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -353,7 +454,7 @@ func (x *UpdateTaskRequest) String() string {
 func (*UpdateTaskRequest) ProtoMessage() {}
 
 func (x *UpdateTaskRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_task_v1_task_proto_msgTypes[5]
+	mi := &file_task_v1_task_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -366,7 +467,7 @@ func (x *UpdateTaskRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateTaskRequest.ProtoReflect.Descriptor instead.
 func (*UpdateTaskRequest) Descriptor() ([]byte, []int) {
-	return file_task_v1_task_proto_rawDescGZIP(), []int{5}
+	return file_task_v1_task_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *UpdateTaskRequest) GetId() string {
@@ -414,7 +515,7 @@ type UpdateTaskResponse struct {
 
 func (x *UpdateTaskResponse) Reset() {
 	*x = UpdateTaskResponse{}
-	mi := &file_task_v1_task_proto_msgTypes[6]
+	mi := &file_task_v1_task_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -426,7 +527,7 @@ func (x *UpdateTaskResponse) String() string {
 func (*UpdateTaskResponse) ProtoMessage() {}
 
 func (x *UpdateTaskResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_task_v1_task_proto_msgTypes[6]
+	mi := &file_task_v1_task_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -439,7 +540,7 @@ func (x *UpdateTaskResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateTaskResponse.ProtoReflect.Descriptor instead.
 func (*UpdateTaskResponse) Descriptor() ([]byte, []int) {
-	return file_task_v1_task_proto_rawDescGZIP(), []int{6}
+	return file_task_v1_task_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *UpdateTaskResponse) GetTask() *Task {
@@ -459,7 +560,7 @@ type DeleteTaskRequest struct {
 
 func (x *DeleteTaskRequest) Reset() {
 	*x = DeleteTaskRequest{}
-	mi := &file_task_v1_task_proto_msgTypes[7]
+	mi := &file_task_v1_task_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -471,7 +572,7 @@ func (x *DeleteTaskRequest) String() string {
 func (*DeleteTaskRequest) ProtoMessage() {}
 
 func (x *DeleteTaskRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_task_v1_task_proto_msgTypes[7]
+	mi := &file_task_v1_task_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -484,7 +585,7 @@ func (x *DeleteTaskRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteTaskRequest.ProtoReflect.Descriptor instead.
 func (*DeleteTaskRequest) Descriptor() ([]byte, []int) {
-	return file_task_v1_task_proto_rawDescGZIP(), []int{7}
+	return file_task_v1_task_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *DeleteTaskRequest) GetId() string {
@@ -503,7 +604,7 @@ type DeleteTaskResponse struct {
 
 func (x *DeleteTaskResponse) Reset() {
 	*x = DeleteTaskResponse{}
-	mi := &file_task_v1_task_proto_msgTypes[8]
+	mi := &file_task_v1_task_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -515,7 +616,7 @@ func (x *DeleteTaskResponse) String() string {
 func (*DeleteTaskResponse) ProtoMessage() {}
 
 func (x *DeleteTaskResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_task_v1_task_proto_msgTypes[8]
+	mi := &file_task_v1_task_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -528,7 +629,7 @@ func (x *DeleteTaskResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteTaskResponse.ProtoReflect.Descriptor instead.
 func (*DeleteTaskResponse) Descriptor() ([]byte, []int) {
-	return file_task_v1_task_proto_rawDescGZIP(), []int{8}
+	return file_task_v1_task_proto_rawDescGZIP(), []int{9}
 }
 
 // ArchiveTaskRequest is the request message for archiving a task
@@ -541,7 +642,7 @@ type ArchiveTaskRequest struct {
 
 func (x *ArchiveTaskRequest) Reset() {
 	*x = ArchiveTaskRequest{}
-	mi := &file_task_v1_task_proto_msgTypes[9]
+	mi := &file_task_v1_task_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -553,7 +654,7 @@ func (x *ArchiveTaskRequest) String() string {
 func (*ArchiveTaskRequest) ProtoMessage() {}
 
 func (x *ArchiveTaskRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_task_v1_task_proto_msgTypes[9]
+	mi := &file_task_v1_task_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -566,7 +667,7 @@ func (x *ArchiveTaskRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ArchiveTaskRequest.ProtoReflect.Descriptor instead.
 func (*ArchiveTaskRequest) Descriptor() ([]byte, []int) {
-	return file_task_v1_task_proto_rawDescGZIP(), []int{9}
+	return file_task_v1_task_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *ArchiveTaskRequest) GetId() string {
@@ -586,7 +687,7 @@ type ArchiveTaskResponse struct {
 
 func (x *ArchiveTaskResponse) Reset() {
 	*x = ArchiveTaskResponse{}
-	mi := &file_task_v1_task_proto_msgTypes[10]
+	mi := &file_task_v1_task_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -598,7 +699,7 @@ func (x *ArchiveTaskResponse) String() string {
 func (*ArchiveTaskResponse) ProtoMessage() {}
 
 func (x *ArchiveTaskResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_task_v1_task_proto_msgTypes[10]
+	mi := &file_task_v1_task_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -611,7 +712,7 @@ func (x *ArchiveTaskResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ArchiveTaskResponse.ProtoReflect.Descriptor instead.
 func (*ArchiveTaskResponse) Descriptor() ([]byte, []int) {
-	return file_task_v1_task_proto_rawDescGZIP(), []int{10}
+	return file_task_v1_task_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *ArchiveTaskResponse) GetTask() *Task {
@@ -631,7 +732,7 @@ type UnarchiveTaskRequest struct {
 
 func (x *UnarchiveTaskRequest) Reset() {
 	*x = UnarchiveTaskRequest{}
-	mi := &file_task_v1_task_proto_msgTypes[11]
+	mi := &file_task_v1_task_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -643,7 +744,7 @@ func (x *UnarchiveTaskRequest) String() string {
 func (*UnarchiveTaskRequest) ProtoMessage() {}
 
 func (x *UnarchiveTaskRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_task_v1_task_proto_msgTypes[11]
+	mi := &file_task_v1_task_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -656,7 +757,7 @@ func (x *UnarchiveTaskRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UnarchiveTaskRequest.ProtoReflect.Descriptor instead.
 func (*UnarchiveTaskRequest) Descriptor() ([]byte, []int) {
-	return file_task_v1_task_proto_rawDescGZIP(), []int{11}
+	return file_task_v1_task_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *UnarchiveTaskRequest) GetId() string {
@@ -676,7 +777,7 @@ type UnarchiveTaskResponse struct {
 
 func (x *UnarchiveTaskResponse) Reset() {
 	*x = UnarchiveTaskResponse{}
-	mi := &file_task_v1_task_proto_msgTypes[12]
+	mi := &file_task_v1_task_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -688,7 +789,7 @@ func (x *UnarchiveTaskResponse) String() string {
 func (*UnarchiveTaskResponse) ProtoMessage() {}
 
 func (x *UnarchiveTaskResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_task_v1_task_proto_msgTypes[12]
+	mi := &file_task_v1_task_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -701,7 +802,7 @@ func (x *UnarchiveTaskResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UnarchiveTaskResponse.ProtoReflect.Descriptor instead.
 func (*UnarchiveTaskResponse) Descriptor() ([]byte, []int) {
-	return file_task_v1_task_proto_rawDescGZIP(), []int{12}
+	return file_task_v1_task_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *UnarchiveTaskResponse) GetTask() *Task {
@@ -725,7 +826,7 @@ type ListTasksRequest struct {
 
 func (x *ListTasksRequest) Reset() {
 	*x = ListTasksRequest{}
-	mi := &file_task_v1_task_proto_msgTypes[13]
+	mi := &file_task_v1_task_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -737,7 +838,7 @@ func (x *ListTasksRequest) String() string {
 func (*ListTasksRequest) ProtoMessage() {}
 
 func (x *ListTasksRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_task_v1_task_proto_msgTypes[13]
+	mi := &file_task_v1_task_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -750,7 +851,7 @@ func (x *ListTasksRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTasksRequest.ProtoReflect.Descriptor instead.
 func (*ListTasksRequest) Descriptor() ([]byte, []int) {
-	return file_task_v1_task_proto_rawDescGZIP(), []int{13}
+	return file_task_v1_task_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *ListTasksRequest) GetPageSize() int32 {
@@ -799,7 +900,7 @@ type ListTasksResponse struct {
 
 func (x *ListTasksResponse) Reset() {
 	*x = ListTasksResponse{}
-	mi := &file_task_v1_task_proto_msgTypes[14]
+	mi := &file_task_v1_task_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -811,7 +912,7 @@ func (x *ListTasksResponse) String() string {
 func (*ListTasksResponse) ProtoMessage() {}
 
 func (x *ListTasksResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_task_v1_task_proto_msgTypes[14]
+	mi := &file_task_v1_task_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -824,7 +925,7 @@ func (x *ListTasksResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTasksResponse.ProtoReflect.Descriptor instead.
 func (*ListTasksResponse) Descriptor() ([]byte, []int) {
-	return file_task_v1_task_proto_rawDescGZIP(), []int{14}
+	return file_task_v1_task_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *ListTasksResponse) GetTasks() []*Task {
@@ -841,11 +942,486 @@ func (x *ListTasksResponse) GetNextPageToken() string {
 	return ""
 }
 
+// AddChecklistItemRequest creates a new checklist item for a task
+type AddChecklistItemRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	TaskId        string                 `protobuf:"bytes,1,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
+	Content       string                 `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AddChecklistItemRequest) Reset() {
+	*x = AddChecklistItemRequest{}
+	mi := &file_task_v1_task_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AddChecklistItemRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AddChecklistItemRequest) ProtoMessage() {}
+
+func (x *AddChecklistItemRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_task_v1_task_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AddChecklistItemRequest.ProtoReflect.Descriptor instead.
+func (*AddChecklistItemRequest) Descriptor() ([]byte, []int) {
+	return file_task_v1_task_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *AddChecklistItemRequest) GetTaskId() string {
+	if x != nil {
+		return x.TaskId
+	}
+	return ""
+}
+
+func (x *AddChecklistItemRequest) GetContent() string {
+	if x != nil {
+		return x.Content
+	}
+	return ""
+}
+
+// AddChecklistItemResponse returns the created checklist item
+type AddChecklistItemResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Item          *ChecklistItem         `protobuf:"bytes,1,opt,name=item,proto3" json:"item,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AddChecklistItemResponse) Reset() {
+	*x = AddChecklistItemResponse{}
+	mi := &file_task_v1_task_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AddChecklistItemResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AddChecklistItemResponse) ProtoMessage() {}
+
+func (x *AddChecklistItemResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_task_v1_task_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AddChecklistItemResponse.ProtoReflect.Descriptor instead.
+func (*AddChecklistItemResponse) Descriptor() ([]byte, []int) {
+	return file_task_v1_task_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *AddChecklistItemResponse) GetItem() *ChecklistItem {
+	if x != nil {
+		return x.Item
+	}
+	return nil
+}
+
+// UpdateChecklistItemRequest updates checklist item content
+type UpdateChecklistItemRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ItemId        string                 `protobuf:"bytes,1,opt,name=item_id,json=itemId,proto3" json:"item_id,omitempty"`
+	Content       string                 `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateChecklistItemRequest) Reset() {
+	*x = UpdateChecklistItemRequest{}
+	mi := &file_task_v1_task_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateChecklistItemRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateChecklistItemRequest) ProtoMessage() {}
+
+func (x *UpdateChecklistItemRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_task_v1_task_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateChecklistItemRequest.ProtoReflect.Descriptor instead.
+func (*UpdateChecklistItemRequest) Descriptor() ([]byte, []int) {
+	return file_task_v1_task_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *UpdateChecklistItemRequest) GetItemId() string {
+	if x != nil {
+		return x.ItemId
+	}
+	return ""
+}
+
+func (x *UpdateChecklistItemRequest) GetContent() string {
+	if x != nil {
+		return x.Content
+	}
+	return ""
+}
+
+// UpdateChecklistItemResponse returns the updated checklist item
+type UpdateChecklistItemResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Item          *ChecklistItem         `protobuf:"bytes,1,opt,name=item,proto3" json:"item,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateChecklistItemResponse) Reset() {
+	*x = UpdateChecklistItemResponse{}
+	mi := &file_task_v1_task_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateChecklistItemResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateChecklistItemResponse) ProtoMessage() {}
+
+func (x *UpdateChecklistItemResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_task_v1_task_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateChecklistItemResponse.ProtoReflect.Descriptor instead.
+func (*UpdateChecklistItemResponse) Descriptor() ([]byte, []int) {
+	return file_task_v1_task_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *UpdateChecklistItemResponse) GetItem() *ChecklistItem {
+	if x != nil {
+		return x.Item
+	}
+	return nil
+}
+
+// SetChecklistItemCompletedRequest sets checklist item completion state
+type SetChecklistItemCompletedRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ItemId        string                 `protobuf:"bytes,1,opt,name=item_id,json=itemId,proto3" json:"item_id,omitempty"`
+	Completed     bool                   `protobuf:"varint,2,opt,name=completed,proto3" json:"completed,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetChecklistItemCompletedRequest) Reset() {
+	*x = SetChecklistItemCompletedRequest{}
+	mi := &file_task_v1_task_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetChecklistItemCompletedRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetChecklistItemCompletedRequest) ProtoMessage() {}
+
+func (x *SetChecklistItemCompletedRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_task_v1_task_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetChecklistItemCompletedRequest.ProtoReflect.Descriptor instead.
+func (*SetChecklistItemCompletedRequest) Descriptor() ([]byte, []int) {
+	return file_task_v1_task_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *SetChecklistItemCompletedRequest) GetItemId() string {
+	if x != nil {
+		return x.ItemId
+	}
+	return ""
+}
+
+func (x *SetChecklistItemCompletedRequest) GetCompleted() bool {
+	if x != nil {
+		return x.Completed
+	}
+	return false
+}
+
+// SetChecklistItemCompletedResponse returns the updated checklist item
+type SetChecklistItemCompletedResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Item          *ChecklistItem         `protobuf:"bytes,1,opt,name=item,proto3" json:"item,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetChecklistItemCompletedResponse) Reset() {
+	*x = SetChecklistItemCompletedResponse{}
+	mi := &file_task_v1_task_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetChecklistItemCompletedResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetChecklistItemCompletedResponse) ProtoMessage() {}
+
+func (x *SetChecklistItemCompletedResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_task_v1_task_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetChecklistItemCompletedResponse.ProtoReflect.Descriptor instead.
+func (*SetChecklistItemCompletedResponse) Descriptor() ([]byte, []int) {
+	return file_task_v1_task_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *SetChecklistItemCompletedResponse) GetItem() *ChecklistItem {
+	if x != nil {
+		return x.Item
+	}
+	return nil
+}
+
+// DeleteChecklistItemRequest deletes a checklist item
+type DeleteChecklistItemRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ItemId        string                 `protobuf:"bytes,1,opt,name=item_id,json=itemId,proto3" json:"item_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteChecklistItemRequest) Reset() {
+	*x = DeleteChecklistItemRequest{}
+	mi := &file_task_v1_task_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteChecklistItemRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteChecklistItemRequest) ProtoMessage() {}
+
+func (x *DeleteChecklistItemRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_task_v1_task_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteChecklistItemRequest.ProtoReflect.Descriptor instead.
+func (*DeleteChecklistItemRequest) Descriptor() ([]byte, []int) {
+	return file_task_v1_task_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *DeleteChecklistItemRequest) GetItemId() string {
+	if x != nil {
+		return x.ItemId
+	}
+	return ""
+}
+
+// DeleteChecklistItemResponse indicates successful deletion
+type DeleteChecklistItemResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteChecklistItemResponse) Reset() {
+	*x = DeleteChecklistItemResponse{}
+	mi := &file_task_v1_task_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteChecklistItemResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteChecklistItemResponse) ProtoMessage() {}
+
+func (x *DeleteChecklistItemResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_task_v1_task_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteChecklistItemResponse.ProtoReflect.Descriptor instead.
+func (*DeleteChecklistItemResponse) Descriptor() ([]byte, []int) {
+	return file_task_v1_task_proto_rawDescGZIP(), []int{23}
+}
+
+// ReorderChecklistItemsRequest reorders all checklist items for a task.
+// item_ids must contain all checklist item IDs for the task in final order.
+type ReorderChecklistItemsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	TaskId        string                 `protobuf:"bytes,1,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
+	ItemIds       []string               `protobuf:"bytes,2,rep,name=item_ids,json=itemIds,proto3" json:"item_ids,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ReorderChecklistItemsRequest) Reset() {
+	*x = ReorderChecklistItemsRequest{}
+	mi := &file_task_v1_task_proto_msgTypes[24]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReorderChecklistItemsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReorderChecklistItemsRequest) ProtoMessage() {}
+
+func (x *ReorderChecklistItemsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_task_v1_task_proto_msgTypes[24]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReorderChecklistItemsRequest.ProtoReflect.Descriptor instead.
+func (*ReorderChecklistItemsRequest) Descriptor() ([]byte, []int) {
+	return file_task_v1_task_proto_rawDescGZIP(), []int{24}
+}
+
+func (x *ReorderChecklistItemsRequest) GetTaskId() string {
+	if x != nil {
+		return x.TaskId
+	}
+	return ""
+}
+
+func (x *ReorderChecklistItemsRequest) GetItemIds() []string {
+	if x != nil {
+		return x.ItemIds
+	}
+	return nil
+}
+
+// ReorderChecklistItemsResponse returns checklist items in updated order
+type ReorderChecklistItemsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Items         []*ChecklistItem       `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ReorderChecklistItemsResponse) Reset() {
+	*x = ReorderChecklistItemsResponse{}
+	mi := &file_task_v1_task_proto_msgTypes[25]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReorderChecklistItemsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReorderChecklistItemsResponse) ProtoMessage() {}
+
+func (x *ReorderChecklistItemsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_task_v1_task_proto_msgTypes[25]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReorderChecklistItemsResponse.ProtoReflect.Descriptor instead.
+func (*ReorderChecklistItemsResponse) Descriptor() ([]byte, []int) {
+	return file_task_v1_task_proto_rawDescGZIP(), []int{25}
+}
+
+func (x *ReorderChecklistItemsResponse) GetItems() []*ChecklistItem {
+	if x != nil {
+		return x.Items
+	}
+	return nil
+}
+
 var File_task_v1_task_proto protoreflect.FileDescriptor
 
 const file_task_v1_task_proto_rawDesc = "" +
 	"\n" +
-	"\x12task/v1/task.proto\x12\atask.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\xd6\x02\n" +
+	"\x12task/v1/task.proto\x12\atask.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\x97\x03\n" +
 	"\x04Task\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x14\n" +
@@ -858,9 +1434,22 @@ const file_task_v1_task_proto_rawDesc = "" +
 	"\varchived_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampH\x00R\n" +
 	"archivedAt\x88\x01\x01\x12\"\n" +
 	"\n" +
-	"start_date\x18\t \x01(\tH\x01R\tstartDate\x88\x01\x01B\x0e\n" +
+	"start_date\x18\t \x01(\tH\x01R\tstartDate\x88\x01\x01\x12?\n" +
+	"\x0fchecklist_items\x18\n" +
+	" \x03(\v2\x16.task.v1.ChecklistItemR\x0echecklistItemsB\x0e\n" +
 	"\f_archived_atB\r\n" +
-	"\v_start_date\"\x8f\x01\n" +
+	"\v_start_date\"\x85\x02\n" +
+	"\rChecklistItem\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x17\n" +
+	"\atask_id\x18\x02 \x01(\tR\x06taskId\x12\x18\n" +
+	"\acontent\x18\x03 \x01(\tR\acontent\x12\x1c\n" +
+	"\tcompleted\x18\x04 \x01(\bR\tcompleted\x12\x1d\n" +
+	"\n" +
+	"sort_order\x18\x05 \x01(\x05R\tsortOrder\x129\n" +
+	"\n" +
+	"created_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
+	"\n" +
+	"updated_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\x8f\x01\n" +
 	"\x11CreateTaskRequest\x12\x14\n" +
 	"\x05title\x18\x01 \x01(\tR\x05title\x12\x14\n" +
 	"\x05notes\x18\x02 \x01(\tR\x05notes\x12\x1b\n" +
@@ -906,7 +1495,30 @@ const file_task_v1_task_proto_rawDesc = "" +
 	"\x0e_archived_only\"`\n" +
 	"\x11ListTasksResponse\x12#\n" +
 	"\x05tasks\x18\x01 \x03(\v2\r.task.v1.TaskR\x05tasks\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken2\xfe\x03\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"L\n" +
+	"\x17AddChecklistItemRequest\x12\x17\n" +
+	"\atask_id\x18\x01 \x01(\tR\x06taskId\x12\x18\n" +
+	"\acontent\x18\x02 \x01(\tR\acontent\"F\n" +
+	"\x18AddChecklistItemResponse\x12*\n" +
+	"\x04item\x18\x01 \x01(\v2\x16.task.v1.ChecklistItemR\x04item\"O\n" +
+	"\x1aUpdateChecklistItemRequest\x12\x17\n" +
+	"\aitem_id\x18\x01 \x01(\tR\x06itemId\x12\x18\n" +
+	"\acontent\x18\x02 \x01(\tR\acontent\"I\n" +
+	"\x1bUpdateChecklistItemResponse\x12*\n" +
+	"\x04item\x18\x01 \x01(\v2\x16.task.v1.ChecklistItemR\x04item\"Y\n" +
+	" SetChecklistItemCompletedRequest\x12\x17\n" +
+	"\aitem_id\x18\x01 \x01(\tR\x06itemId\x12\x1c\n" +
+	"\tcompleted\x18\x02 \x01(\bR\tcompleted\"O\n" +
+	"!SetChecklistItemCompletedResponse\x12*\n" +
+	"\x04item\x18\x01 \x01(\v2\x16.task.v1.ChecklistItemR\x04item\"5\n" +
+	"\x1aDeleteChecklistItemRequest\x12\x17\n" +
+	"\aitem_id\x18\x01 \x01(\tR\x06itemId\"\x1d\n" +
+	"\x1bDeleteChecklistItemResponse\"R\n" +
+	"\x1cReorderChecklistItemsRequest\x12\x17\n" +
+	"\atask_id\x18\x01 \x01(\tR\x06taskId\x12\x19\n" +
+	"\bitem_ids\x18\x02 \x03(\tR\aitemIds\"M\n" +
+	"\x1dReorderChecklistItemsResponse\x12,\n" +
+	"\x05items\x18\x01 \x03(\v2\x16.task.v1.ChecklistItemR\x05items2\xf7\a\n" +
 	"\vTaskService\x12E\n" +
 	"\n" +
 	"CreateTask\x12\x1a.task.v1.CreateTaskRequest\x1a\x1b.task.v1.CreateTaskResponse\x12<\n" +
@@ -917,7 +1529,12 @@ const file_task_v1_task_proto_rawDesc = "" +
 	"DeleteTask\x12\x1a.task.v1.DeleteTaskRequest\x1a\x1b.task.v1.DeleteTaskResponse\x12B\n" +
 	"\tListTasks\x12\x19.task.v1.ListTasksRequest\x1a\x1a.task.v1.ListTasksResponse\x12H\n" +
 	"\vArchiveTask\x12\x1b.task.v1.ArchiveTaskRequest\x1a\x1c.task.v1.ArchiveTaskResponse\x12N\n" +
-	"\rUnarchiveTask\x12\x1d.task.v1.UnarchiveTaskRequest\x1a\x1e.task.v1.UnarchiveTaskResponseB\x8b\x01\n" +
+	"\rUnarchiveTask\x12\x1d.task.v1.UnarchiveTaskRequest\x1a\x1e.task.v1.UnarchiveTaskResponse\x12W\n" +
+	"\x10AddChecklistItem\x12 .task.v1.AddChecklistItemRequest\x1a!.task.v1.AddChecklistItemResponse\x12`\n" +
+	"\x13UpdateChecklistItem\x12#.task.v1.UpdateChecklistItemRequest\x1a$.task.v1.UpdateChecklistItemResponse\x12r\n" +
+	"\x19SetChecklistItemCompleted\x12).task.v1.SetChecklistItemCompletedRequest\x1a*.task.v1.SetChecklistItemCompletedResponse\x12`\n" +
+	"\x13DeleteChecklistItem\x12#.task.v1.DeleteChecklistItemRequest\x1a$.task.v1.DeleteChecklistItemResponse\x12f\n" +
+	"\x15ReorderChecklistItems\x12%.task.v1.ReorderChecklistItemsRequest\x1a&.task.v1.ReorderChecklistItemsResponseB\x8b\x01\n" +
 	"\vcom.task.v1B\tTaskProtoP\x01Z4github.com/slips-ai/slips-core/gen/go/task/v1;taskv1\xa2\x02\x03TXX\xaa\x02\aTask.V1\xca\x02\aTask\\V1\xe2\x02\x13Task\\V1\\GPBMetadata\xea\x02\bTask::V1b\x06proto3"
 
 var (
@@ -932,54 +1549,82 @@ func file_task_v1_task_proto_rawDescGZIP() []byte {
 	return file_task_v1_task_proto_rawDescData
 }
 
-var file_task_v1_task_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
+var file_task_v1_task_proto_msgTypes = make([]protoimpl.MessageInfo, 26)
 var file_task_v1_task_proto_goTypes = []any{
-	(*Task)(nil),                  // 0: task.v1.Task
-	(*CreateTaskRequest)(nil),     // 1: task.v1.CreateTaskRequest
-	(*CreateTaskResponse)(nil),    // 2: task.v1.CreateTaskResponse
-	(*GetTaskRequest)(nil),        // 3: task.v1.GetTaskRequest
-	(*GetTaskResponse)(nil),       // 4: task.v1.GetTaskResponse
-	(*UpdateTaskRequest)(nil),     // 5: task.v1.UpdateTaskRequest
-	(*UpdateTaskResponse)(nil),    // 6: task.v1.UpdateTaskResponse
-	(*DeleteTaskRequest)(nil),     // 7: task.v1.DeleteTaskRequest
-	(*DeleteTaskResponse)(nil),    // 8: task.v1.DeleteTaskResponse
-	(*ArchiveTaskRequest)(nil),    // 9: task.v1.ArchiveTaskRequest
-	(*ArchiveTaskResponse)(nil),   // 10: task.v1.ArchiveTaskResponse
-	(*UnarchiveTaskRequest)(nil),  // 11: task.v1.UnarchiveTaskRequest
-	(*UnarchiveTaskResponse)(nil), // 12: task.v1.UnarchiveTaskResponse
-	(*ListTasksRequest)(nil),      // 13: task.v1.ListTasksRequest
-	(*ListTasksResponse)(nil),     // 14: task.v1.ListTasksResponse
-	(*timestamppb.Timestamp)(nil), // 15: google.protobuf.Timestamp
+	(*Task)(nil),                              // 0: task.v1.Task
+	(*ChecklistItem)(nil),                     // 1: task.v1.ChecklistItem
+	(*CreateTaskRequest)(nil),                 // 2: task.v1.CreateTaskRequest
+	(*CreateTaskResponse)(nil),                // 3: task.v1.CreateTaskResponse
+	(*GetTaskRequest)(nil),                    // 4: task.v1.GetTaskRequest
+	(*GetTaskResponse)(nil),                   // 5: task.v1.GetTaskResponse
+	(*UpdateTaskRequest)(nil),                 // 6: task.v1.UpdateTaskRequest
+	(*UpdateTaskResponse)(nil),                // 7: task.v1.UpdateTaskResponse
+	(*DeleteTaskRequest)(nil),                 // 8: task.v1.DeleteTaskRequest
+	(*DeleteTaskResponse)(nil),                // 9: task.v1.DeleteTaskResponse
+	(*ArchiveTaskRequest)(nil),                // 10: task.v1.ArchiveTaskRequest
+	(*ArchiveTaskResponse)(nil),               // 11: task.v1.ArchiveTaskResponse
+	(*UnarchiveTaskRequest)(nil),              // 12: task.v1.UnarchiveTaskRequest
+	(*UnarchiveTaskResponse)(nil),             // 13: task.v1.UnarchiveTaskResponse
+	(*ListTasksRequest)(nil),                  // 14: task.v1.ListTasksRequest
+	(*ListTasksResponse)(nil),                 // 15: task.v1.ListTasksResponse
+	(*AddChecklistItemRequest)(nil),           // 16: task.v1.AddChecklistItemRequest
+	(*AddChecklistItemResponse)(nil),          // 17: task.v1.AddChecklistItemResponse
+	(*UpdateChecklistItemRequest)(nil),        // 18: task.v1.UpdateChecklistItemRequest
+	(*UpdateChecklistItemResponse)(nil),       // 19: task.v1.UpdateChecklistItemResponse
+	(*SetChecklistItemCompletedRequest)(nil),  // 20: task.v1.SetChecklistItemCompletedRequest
+	(*SetChecklistItemCompletedResponse)(nil), // 21: task.v1.SetChecklistItemCompletedResponse
+	(*DeleteChecklistItemRequest)(nil),        // 22: task.v1.DeleteChecklistItemRequest
+	(*DeleteChecklistItemResponse)(nil),       // 23: task.v1.DeleteChecklistItemResponse
+	(*ReorderChecklistItemsRequest)(nil),      // 24: task.v1.ReorderChecklistItemsRequest
+	(*ReorderChecklistItemsResponse)(nil),     // 25: task.v1.ReorderChecklistItemsResponse
+	(*timestamppb.Timestamp)(nil),             // 26: google.protobuf.Timestamp
 }
 var file_task_v1_task_proto_depIdxs = []int32{
-	15, // 0: task.v1.Task.created_at:type_name -> google.protobuf.Timestamp
-	15, // 1: task.v1.Task.updated_at:type_name -> google.protobuf.Timestamp
-	15, // 2: task.v1.Task.archived_at:type_name -> google.protobuf.Timestamp
-	0,  // 3: task.v1.CreateTaskResponse.task:type_name -> task.v1.Task
-	0,  // 4: task.v1.GetTaskResponse.task:type_name -> task.v1.Task
-	0,  // 5: task.v1.UpdateTaskResponse.task:type_name -> task.v1.Task
-	0,  // 6: task.v1.ArchiveTaskResponse.task:type_name -> task.v1.Task
-	0,  // 7: task.v1.UnarchiveTaskResponse.task:type_name -> task.v1.Task
-	0,  // 8: task.v1.ListTasksResponse.tasks:type_name -> task.v1.Task
-	1,  // 9: task.v1.TaskService.CreateTask:input_type -> task.v1.CreateTaskRequest
-	3,  // 10: task.v1.TaskService.GetTask:input_type -> task.v1.GetTaskRequest
-	5,  // 11: task.v1.TaskService.UpdateTask:input_type -> task.v1.UpdateTaskRequest
-	7,  // 12: task.v1.TaskService.DeleteTask:input_type -> task.v1.DeleteTaskRequest
-	13, // 13: task.v1.TaskService.ListTasks:input_type -> task.v1.ListTasksRequest
-	9,  // 14: task.v1.TaskService.ArchiveTask:input_type -> task.v1.ArchiveTaskRequest
-	11, // 15: task.v1.TaskService.UnarchiveTask:input_type -> task.v1.UnarchiveTaskRequest
-	2,  // 16: task.v1.TaskService.CreateTask:output_type -> task.v1.CreateTaskResponse
-	4,  // 17: task.v1.TaskService.GetTask:output_type -> task.v1.GetTaskResponse
-	6,  // 18: task.v1.TaskService.UpdateTask:output_type -> task.v1.UpdateTaskResponse
-	8,  // 19: task.v1.TaskService.DeleteTask:output_type -> task.v1.DeleteTaskResponse
-	14, // 20: task.v1.TaskService.ListTasks:output_type -> task.v1.ListTasksResponse
-	10, // 21: task.v1.TaskService.ArchiveTask:output_type -> task.v1.ArchiveTaskResponse
-	12, // 22: task.v1.TaskService.UnarchiveTask:output_type -> task.v1.UnarchiveTaskResponse
-	16, // [16:23] is the sub-list for method output_type
-	9,  // [9:16] is the sub-list for method input_type
-	9,  // [9:9] is the sub-list for extension type_name
-	9,  // [9:9] is the sub-list for extension extendee
-	0,  // [0:9] is the sub-list for field type_name
+	26, // 0: task.v1.Task.created_at:type_name -> google.protobuf.Timestamp
+	26, // 1: task.v1.Task.updated_at:type_name -> google.protobuf.Timestamp
+	26, // 2: task.v1.Task.archived_at:type_name -> google.protobuf.Timestamp
+	1,  // 3: task.v1.Task.checklist_items:type_name -> task.v1.ChecklistItem
+	26, // 4: task.v1.ChecklistItem.created_at:type_name -> google.protobuf.Timestamp
+	26, // 5: task.v1.ChecklistItem.updated_at:type_name -> google.protobuf.Timestamp
+	0,  // 6: task.v1.CreateTaskResponse.task:type_name -> task.v1.Task
+	0,  // 7: task.v1.GetTaskResponse.task:type_name -> task.v1.Task
+	0,  // 8: task.v1.UpdateTaskResponse.task:type_name -> task.v1.Task
+	0,  // 9: task.v1.ArchiveTaskResponse.task:type_name -> task.v1.Task
+	0,  // 10: task.v1.UnarchiveTaskResponse.task:type_name -> task.v1.Task
+	0,  // 11: task.v1.ListTasksResponse.tasks:type_name -> task.v1.Task
+	1,  // 12: task.v1.AddChecklistItemResponse.item:type_name -> task.v1.ChecklistItem
+	1,  // 13: task.v1.UpdateChecklistItemResponse.item:type_name -> task.v1.ChecklistItem
+	1,  // 14: task.v1.SetChecklistItemCompletedResponse.item:type_name -> task.v1.ChecklistItem
+	1,  // 15: task.v1.ReorderChecklistItemsResponse.items:type_name -> task.v1.ChecklistItem
+	2,  // 16: task.v1.TaskService.CreateTask:input_type -> task.v1.CreateTaskRequest
+	4,  // 17: task.v1.TaskService.GetTask:input_type -> task.v1.GetTaskRequest
+	6,  // 18: task.v1.TaskService.UpdateTask:input_type -> task.v1.UpdateTaskRequest
+	8,  // 19: task.v1.TaskService.DeleteTask:input_type -> task.v1.DeleteTaskRequest
+	14, // 20: task.v1.TaskService.ListTasks:input_type -> task.v1.ListTasksRequest
+	10, // 21: task.v1.TaskService.ArchiveTask:input_type -> task.v1.ArchiveTaskRequest
+	12, // 22: task.v1.TaskService.UnarchiveTask:input_type -> task.v1.UnarchiveTaskRequest
+	16, // 23: task.v1.TaskService.AddChecklistItem:input_type -> task.v1.AddChecklistItemRequest
+	18, // 24: task.v1.TaskService.UpdateChecklistItem:input_type -> task.v1.UpdateChecklistItemRequest
+	20, // 25: task.v1.TaskService.SetChecklistItemCompleted:input_type -> task.v1.SetChecklistItemCompletedRequest
+	22, // 26: task.v1.TaskService.DeleteChecklistItem:input_type -> task.v1.DeleteChecklistItemRequest
+	24, // 27: task.v1.TaskService.ReorderChecklistItems:input_type -> task.v1.ReorderChecklistItemsRequest
+	3,  // 28: task.v1.TaskService.CreateTask:output_type -> task.v1.CreateTaskResponse
+	5,  // 29: task.v1.TaskService.GetTask:output_type -> task.v1.GetTaskResponse
+	7,  // 30: task.v1.TaskService.UpdateTask:output_type -> task.v1.UpdateTaskResponse
+	9,  // 31: task.v1.TaskService.DeleteTask:output_type -> task.v1.DeleteTaskResponse
+	15, // 32: task.v1.TaskService.ListTasks:output_type -> task.v1.ListTasksResponse
+	11, // 33: task.v1.TaskService.ArchiveTask:output_type -> task.v1.ArchiveTaskResponse
+	13, // 34: task.v1.TaskService.UnarchiveTask:output_type -> task.v1.UnarchiveTaskResponse
+	17, // 35: task.v1.TaskService.AddChecklistItem:output_type -> task.v1.AddChecklistItemResponse
+	19, // 36: task.v1.TaskService.UpdateChecklistItem:output_type -> task.v1.UpdateChecklistItemResponse
+	21, // 37: task.v1.TaskService.SetChecklistItemCompleted:output_type -> task.v1.SetChecklistItemCompletedResponse
+	23, // 38: task.v1.TaskService.DeleteChecklistItem:output_type -> task.v1.DeleteChecklistItemResponse
+	25, // 39: task.v1.TaskService.ReorderChecklistItems:output_type -> task.v1.ReorderChecklistItemsResponse
+	28, // [28:40] is the sub-list for method output_type
+	16, // [16:28] is the sub-list for method input_type
+	16, // [16:16] is the sub-list for extension type_name
+	16, // [16:16] is the sub-list for extension extendee
+	0,  // [0:16] is the sub-list for field type_name
 }
 
 func init() { file_task_v1_task_proto_init() }
@@ -988,16 +1633,16 @@ func file_task_v1_task_proto_init() {
 		return
 	}
 	file_task_v1_task_proto_msgTypes[0].OneofWrappers = []any{}
-	file_task_v1_task_proto_msgTypes[1].OneofWrappers = []any{}
-	file_task_v1_task_proto_msgTypes[5].OneofWrappers = []any{}
-	file_task_v1_task_proto_msgTypes[13].OneofWrappers = []any{}
+	file_task_v1_task_proto_msgTypes[2].OneofWrappers = []any{}
+	file_task_v1_task_proto_msgTypes[6].OneofWrappers = []any{}
+	file_task_v1_task_proto_msgTypes[14].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_task_v1_task_proto_rawDesc), len(file_task_v1_task_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   15,
+			NumMessages:   26,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
